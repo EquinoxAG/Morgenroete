@@ -23,7 +23,7 @@
 	%xdefine CALL_FUNC %1	
 
 	%if %0 = 2
-		move_if_unqeual rdi, %2
+		move_if_unequal rdi, %2
 	%elif %0 = 3
 		move_if_unequal rdi, %2
 		move_if_unequal rsi, %3
@@ -113,6 +113,17 @@
 	%endif
 %endmacro
 
+%macro interface_destructor 2
+	%ifndef %1_size
+		%error No interface with the name %1
+	%else
+		%ifdef %1_destructor
+			%warning Overwriting the destructor of the interface %1
+		%endif
+			%xdefine %1_destructor %2
+	%endif
+%endmacro
+
 ;1 = name, 2 = num, 3 = membername
 %macro RegisterByNum 3
 	%xdefine %1_%2 %3
@@ -137,6 +148,7 @@
 		%undef %1_size
 		%undef %1_constructor
 		%undef %1_constructor_pc
+		%undef %1_destructor
 
 		%assign counter 1
 		%rep %1_parameter
@@ -233,6 +245,7 @@
 		mov rbp, rsp
 		%xdefine %$STACK_NAME %1
 		%xdefine %$CONSTRUCTOR_LIST ''
+		%xdefine %$DESTRUCTOR_LIST ''
 		%xdefine NUM_STACKS_OPEN (NUM_STACKS_OPEN+1)
 
 	
@@ -293,15 +306,32 @@
 				%xdefine %$%1_CONSTRUCTOR %2_constructor
 
 				%defstr IRSS_CstStr %1
-				%ifn %$CONSTRUCTOR_LIST = ''
+				%strlen IRSS_CstStrlen %$CONSTRUCTOR_LIST
+				%ifn IRSS_CstStrlen = 0
 					%strcat %$CONSTRUCTOR_LIST %$CONSTRUCTOR_LIST,','
 				%endif
+				%undef IRSS_CstStrlen
 
 				%strcat %$CONSTRUCTOR_LIST %$CONSTRUCTOR_LIST, '%$'
 				%strcat %$CONSTRUCTOR_LIST %$CONSTRUCTOR_LIST, IRSS_CstStr
 
 				%undef IRSS_CstStr
-			%endif			
+			%endif
+
+			%ifdef %2_destructor
+				%strlen IRSS_DstStrlen %$DESTRUCTOR_LIST
+				%ifn IRSS_DstStrlen=0
+					%strcat %$DESTRUCTOR_LIST %$DESTRUCTOR_LIST,','
+				%endif
+				%undef IRSS_DstStrlen
+
+				%defstr IRSS_DstStr %1
+				%xdefine %$%1_DESTRUCTOR %2_destructor
+
+				%strcat %$DESTRUCTOR_LIST %$DESTRUCTOR_LIST, '%$'
+				%strcat %$DESTRUCTOR_LIST %$DESTRUCTOR_LIST, IRSS_DstStr
+				%undef IRSS_DstStr				
+			%endif		
 
 			%undef TryStr
 		%else
@@ -327,12 +357,56 @@
 	%undef DNS_NewStr
 %endmacro
 
+%macro MGR_call_destructors 0
+	%strlen MGRCD_strlen %$DESTRUCTOR_LIST
+	%ifn MGRCD_strlen = 0
+		mov_stack qword[ SaveRbxPtr ], rbx
+		%deftok MGRCD_ArgList %$DESTRUCTOR_LIST
+		call_dst MGRCD_ArgList
+		%undef MGRCD_ArgList
+		%xdefine %$DESTRUCTOR_LIST ''
+		mov_stack rbx, qword[ SaveRbxPtr ]
+	%endif
+	%undef MGRCD_strlen
+%endmacro
+
+%macro call_dst 1-*
+	%rep %0
+		%defstr CurrStr %1
+		%defstr CurrDst %1
+		%strcat CurrStr CurrStr,'_VAR'
+		%strcat CurrDst CurrDst,'_DESTRUCTOR'
+		%deftok CurrStrTok CurrStr
+		%deftok CurrDstTok CurrDst
+		InDepthCallDst CurrStrTok, CurrDstTok
+		%undef CurrStrTok
+		%undef CurrDstTok
+		%undef CurrDst
+		%undef CurrStr
+		%rotate 1
+	%endrep
+%endmacro
+
+%macro InDepthCallDst 2
+	mov rbx, rbp
+	sub rbx, %1
+	
+	%ifdef %2_CALLING_CONVENTION
+		%2_CALLING_CONVENTION %2,rbx
+	%else
+		STD_CALLING_CONVENTION %2,rbx
+	%endif
+%endmacro
+
 %macro MGR_call_constructors 0
 	%strlen MGRCC_strlen %$CONSTRUCTOR_LIST
 	%ifn MGRCC_strlen = 0
+		mov_stack qword[ SaveRbxPtr ], rbx
 		%deftok ArgList %$CONSTRUCTOR_LIST
 		call_cnst ArgList
+		%undef ArgList
 		%xdefine %$CONSTRUCTOR_LIST ''
+		mov_stack rbx,qword[ SaveRbxPtr ]
 	%endif
 	%undef MGRCC_strlen
 %endmacro
@@ -365,11 +439,6 @@
 %endmacro
 
 %macro InDepthCall 4-*
-	%if NUM_STACKS_OPEN > 0
-		mov_stack qword[ SaveRbxPtr ], rbx
-	%else
-		push rbx
-	%endif
 	mov rbx, rbp
 	sub rbx, %1
 	
@@ -385,12 +454,6 @@
 		%else
 			STD_CALLING_CONVENTION %2,rbx
 		%endif
-	%endif
-
-	%if NUM_STACKS_OPEN > 0
-		mov_stack rbx, qword[ SaveRbxPtr ]
-	%else
-		pop rbx
 	%endif
 %endmacro
 
@@ -424,22 +487,29 @@
 %macro mov_stack 2
 		FindAndReplaceLocalVar %1, OP0
 		FindAndReplaceLocalVar %2, OP1
+		%xdefine DISABLE_INST_MACRO_MOV
 		mov OP0, OP1
+		%undef DISABLE_INST_MACRO_MOV
 		%undef OP0
 		%undef OP1
 %endmacro
 
 
+
 %macro mov 2
-	%if NUM_STACKS_OPEN = 0
+	%ifdef DISABLE_INST_MACRO_MOV
 		mov %1, %2
 	%else
-		UpdateStackPtr
-		FindAndReplaceLocalVar %1, OP0
-		FindAndReplaceLocalVar %2, OP1
-		mov OP0, OP1
-		%undef OP0
-		%undef OP1
+		%if NUM_STACKS_OPEN = 0
+			mov %1, %2
+		%else
+			UpdateStackPtr
+			FindAndReplaceLocalVar %1, OP0
+			FindAndReplaceLocalVar %2, OP1
+			mov OP0, OP1
+			%undef OP0
+			%undef OP1
+		%endif
 	%endif
 %endmacro
 
@@ -529,13 +599,14 @@
 				%deftok FARLV_realoffset FARLV_var
 				%xdefine FARLV_complete rbp - (FARLV_realoffset)
 				%defstr FARLV_completestr FARLV_complete
-				%substr %2 UnderlyingStr 1,(FARLV_counter-1)
-				%strcat %2 %2, FARLV_completestr
+				%substr FARLV_ENDSTR UnderlyingStr 1,(FARLV_counter-1)
+				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_completestr
 				%substr FARLV_endStr UnderlyingStr (FARLV_counter_end+1),(FARLV_strlen-FARLV_counter_end)
-				%strcat %2 %2, FARLV_endStr
-				%deftok %2 %2		
+				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_endStr
+				%deftok %2 FARLV_ENDSTR
 	
 				%undef FARLV_endStr
+				%undef FARLV_ENDSTR
 				%undef FARLV_realoffset
 				%undef FARLV_complete
 				%undef FARLV_completestr		
@@ -555,13 +626,13 @@
 
 %macro UpdateStackPtr 0
 	InternUpdateStackPtr %$STACK_NAME
-	MGR_call_constructors	
 %endmacro
 
 %macro InternUpdateStackPtr 1
 	%ifn STACK_SPACE_%1_CURRENT = STACK_SPACE_%1_FLOATING
 		sub rsp, (STACK_SPACE_%1_FLOATING - STACK_SPACE_%1_CURRENT)
 		%xdefine STACK_SPACE_%1_CURRENT (STACK_SPACE_%1_FLOATING)
+		MGR_call_constructors	
 	%endif
 %endmacro
 
@@ -587,6 +658,7 @@
 
 %macro DestroyStack 1
 	%ifdef STACK_NAME_%1
+		MGR_call_destructors
 		%xdefine NUM_STACKS_OPEN (NUM_STACKS_OPEN-1)
 		%pop %1
 		mov rsp, rbp

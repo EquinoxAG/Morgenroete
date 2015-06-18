@@ -6,7 +6,10 @@ interface MyStruc, tod, 12
 interface seq, intX, 4
 interface seq, intY, 4
 interface_constructor MyStruc, main, 2
+interface_destructor MyStruc, destu
+interface_destructor seq, destu
 
+destu:
 global main
 main:
 	mov rax, MyStruc.string
