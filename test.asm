@@ -5,6 +5,7 @@ interface MyStruc, welt, 8
 interface MyStruc, tod, 12
 interface seq, intX, 4
 interface seq, intY, 4
+interface_constructor MyStruc, main, 2
 
 global main
 main:
@@ -14,10 +15,13 @@ main:
 	mov rdx, MyStruc_size
 
 	CreateStack myS
-	ReserveStackSpace Okax, dword
-	ReserveStackSpace Olax, qword
-	FindAndReplaceLocalVar mov qword[ Olax ], orax
-	DeleteStack myS
+	ReserveStackSpace Okax, MyStruc, rax, rdx
+	ReserveStackSpace Okkox, MyStruc, 100, 200
+	ReserveStackSpace Olax, seq
+
+	mov qword[ Olax.intY ], rax
+	mov qword[ Okax.tod ], rbx
+	DestroyStack myS
 	ret
 
 
