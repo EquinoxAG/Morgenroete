@@ -13,20 +13,11 @@ main:
 	mov rcx, MyStruc.tod
 	mov rdx, MyStruc_size
 
-	ConnectHeapToInterface MyIntok, MyStruc
-	mov rax, MyIntok.welt
-	
-	uninterface MyStruc
-
-	CreateStack HalloStack
-
-	ReserveStackSpace MySt, dword
-	UpdateStackPtr
-
-	IsLocalDefined Is_Def,'%$STACK_NAfgME'
-
-
-	DestroyStack HalloStack	
+	CreateStack myS
+	ReserveStackSpace Okax, dword
+	ReserveStackSpace Olax, qword
+	FindAndReplaceLocalVar mov qword[ Olax ], orax
+	DeleteStack myS
 	ret
 
 

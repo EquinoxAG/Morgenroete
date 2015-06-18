@@ -173,6 +173,7 @@
 			%endif
 	
 			%xdefine %$%1_VAR STACK_SPACE_%3_FLOATING
+			%xdefine %$%1_STRUC %2
 			
 			%undef TryStr
 		%else
@@ -180,6 +181,64 @@
 			%undef VAR_EXISTS
 		%endif
 	%endif
+%endmacro
+
+;1 = expression, 2 = Fixed Token name
+%macro FindAndReplaceLocalVar 2
+	%defstr UnderlyingStr %1
+	%assign FARLV_counter 1
+	%assign FARLV_counter_end 1
+	%strlen FARLV_strlen UnderlyingStr
+
+	%rep FARLV_strlen
+		%substr FARLV_character UnderlyingStr FARLV_counter_end
+		%if FARLV_character = '.'
+			%xdefine FARLV_SUSPECT			
+		%elif FARLV_character = '['
+			%xdefine FARLV_SUSPECT
+		%elif FARLV_character = ']'
+			%xdefine FARLV_SUSPECT
+		%elif FARLV_character = ' '
+			%xdefine FARLV_SUSPECT
+		%endif
+
+		%ifdef FARLV_SUSPECT	
+			%undef FARLV_SUSPECT
+			%substr FARLV_varstr UnderlyingStr FARLV_counter, (FARLV_counter_end-FARLV_counter)
+			%xdefine FARLV_TstStr '%$'
+			%strcat FARLV_TstStr FARLV_TstStr,FARLV_varstr
+			%strcat FARLV_TstStr FARLV_TstStr,'_VAR'
+			IsLocalDefined FARLV_ISVAR, FARLV_TstStr
+			%ifdef FARLV_ISVAR
+				%undef FARLV_ISVAR
+				%if FARLV_character = '.'
+					%strcat FARLV_TstStr FARLV_TstStr, '-'
+				%endif
+
+				%substr FARLV_EndString UnderlyingStr 1, (FARLV_counter-1)
+				%strcat FARLV_TstStr '(rbp-(',FARLV_TstStr
+				%strcat FARLV_TstStr FARLV_TstStr,'))'
+				%strcat FARLV_EndString FARLV_EndString, FARLV_TstStr
+				%substr FARLV_TstStr UnderlyingStr FARLV_counter_end,((FARLV_strlen+1)-FARLV_counter_end)
+				%warning FARLV_TstStr
+				%strcat FARLV_EndString FARLV_EndString, FARLV_TstStr
+				%deftok %2 FARLV_EndString
+
+				%warning This str: %2
+			%else
+				%warning ThisStr FARLV_TstStr
+			%endif
+
+			%undef FARLV_varstr
+			%undef FARLV_TstStr
+			%assign FARLV_counter (FARLV_counter_end+1)
+		%endif
+
+		%assign FARLV_counter_end (FARLV_counter_end+1)
+	%endrep
+	
+
+	%undef UnderlyingStr
 %endmacro
 
 %macro UpdateStackPtr 0
