@@ -21,6 +21,39 @@
 	%xdefine qword_size 8
 %endif
 
+; 1 = current reg str, 2 = to defined reg
+%macro reg64_toreg32 2
+	%if %1 = 'rax'
+		%xdefine %2 eax
+	%elif %1 = 'rbx'
+		%xdefine %2 ebx
+	%elif %1 = 'rcx'
+		%xdefine %2 ecx
+	%elif %1 = 'rdx'
+		%xdefine %2 edx
+	%elif %1 = 'rsi'
+		%xdefine %2 esi
+	%elif %1 = 'rdi'
+		%xdefine %2 edi
+	%elif %1 = 'r8'
+		%xdefine %2 r8d
+	%elif %1 = 'r9'
+		%xdefine %2 r9d
+	%elif %1 = 'r10'
+		%xdefine %2 r10d
+	%elif %1 = 'r11'
+		%xdefine %2 r11d
+	%elif %1 = 'r12'
+		%xdefine %2 r12d
+	%elif %1 = 'r13'
+		%xdefine %2 r13d
+	%elif %1 = 'r14'
+		%xdefine %2 r14d
+	%else
+		%xdefine %2 r15d
+	%endif
+%endmacro
+
 %macro move_if_unequal 2
 	%defstr MIU_Tok0 %1
 	%defstr MIU_Tok1 %2
@@ -28,7 +61,36 @@
 	MGR_strcmp MIU_Tok0, MIU_Tok1, MIU_IS_EQUAL
 
 	%ifndef MIU_IS_EQUAL
-		mov %1, %2
+		DeductType MIU_TYPE_SIZE, MIU_Tok1
+		%ifdef MIU_TYPE_SIZE
+			%ifn MIU_TYPE_SIZE = 8
+				%ifn MIU_TYPE_SIZE = 4
+					FindAndReplaceLocalVar %2, MIU_OPERAND
+					%if MIU_OPERAND_SIZE = 4
+						reg64_toreg32 MIU_Tok0, MIU_NewOP			
+						mov MIU_NewOP, %2
+						%undef MIU_NewOP
+					%else
+						%if MIU_OPERAND_SIZE = 2
+							movzx %1, word%2
+						%else
+							movzx %1, byte%2
+						%endif
+					%endif
+					%undef MIU_OPERAND
+					%undef MIU_OPERAND_SIZE
+				%else
+					reg64_toreg32 MIU_Tok0, MIU_NewOP			
+					mov MIU_NewOP, %2
+					%undef MIU_NewOP
+				%endif
+			%else
+				mov %1, %2
+			%endif
+			%undef MIU_TYPE_SIZE
+		%else
+			mov %1, %2
+		%endif
 	%else
 		%undef MIU_IS_EQUAL
 	%endif
@@ -79,7 +141,7 @@
 
 		%rep (%0-7)
 			%rotate -1
-			%push %1
+			push %1
 		%endrep
 	%endif
 
@@ -91,6 +153,107 @@
 %endmacro
 
 %define STD_CALLING_CONVENTION STDCALL_VX64GCC
+
+;To define if defined, 2 = string
+%macro DeductType 2	
+	CutAllWhiteSpace DT_UnderlyingString, %2
+
+	%deftok DT_IS_NUM DT_UnderlyingString
+	%ifnum DT_IS_NUM
+		%if DT_IS_NUM < 0x100
+			%xdefine %1 1
+		%elif DT_IS_NUM < 0x10000
+			%xdefine %1 2
+		%elif DT_IS_NUM < 0x100000000
+			%xdefine %1 4
+		%else
+			%xdefine %1 8
+		%endif
+	%else
+		MultipleStrCmp DT_IS64, DT_UnderlyingString, 'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'rsp', 'rbp', 'r8', 'r9','r10','r11','r12','r13','r14','r15'
+	
+		%ifdef DT_IS64
+			%undef DT_IS64
+			%xdefine %1 8
+		%endif
+	
+
+		MultipleStrCmp DT_IS32, DT_UnderlyingString, 'eax', 'ebx', 'ecx', 'edx', 'esi', 'edi', 'esp', 'ebp', 'r8d', 'r9d','r10d','r11d','r12d','r13d','r14d','r15d'
+
+		%ifdef DT_IS32
+			%undef DT_IS32
+			%xdefine %1 4
+		%endif
+
+		MultipleStrCmp DT_IS16, DT_UnderlyingString, 'ax', 'bx', 'cx', 'dx', 'si', 'di', 'sp', 'bp', 'r8w', 'r9w','r10w','r11w','r12w','r13w','r14w','r15w'
+
+		%ifdef DT_IS16
+			%undef DT_IS16
+			%xdefine %1 2
+		%endif
+
+		MultipleStrCmp DT_IS8, DT_UnderlyingString, 'al', 'ah', 'bl', 'bh', 'cl', 'ch', 'dl', 'dh'
+		%ifdef DT_IS8
+			%undef DT_IS8
+			%xdefine %1 1
+		%endif
+
+		HasPartStr DT_IS8, DT_UnderlyingString, 'byte['
+		%ifdef DT_IS8
+			%undef DT_IS8
+			%xdefine %1 1
+		%endif
+	
+		HasPartStr DT_IS16, DT_UnderlyingString, 'word['
+		%ifdef DT_IS16
+			%undef DT_IS16
+			%xdefine %1 2
+		%endif
+	
+		HasPartStr DT_IS32, DT_UnderlyingString, 'dword['
+		%ifdef DT_IS32
+			%undef DT_IS32
+			%xdefine %1 4
+		%endif
+
+		HasPartStr DT_IS64, DT_UnderlyingString, 'qword['
+		%ifdef DT_IS64
+			%undef DT_IS64
+			%xdefine %1 8
+		%endif
+
+		HasPartStr DT_ISVAR, DT_UnderlyingString,'['
+		%ifdef DT_ISVAR
+			%undef DT_ISVAR
+			%ifndef %1
+				%xdefine %1 177
+			%endif
+		%endif	
+	%endif
+	%undef DT_IS_NUM
+
+	%undef DT_UnderlyingString
+%endmacro
+
+;to define if true, 2 = string, 3 = part string
+%macro HasPartStr 3
+	%strlen HPS_PartStrlen %3
+	%strlen HPS_WholeStrlen %2
+
+	%assign HPS_counter 1
+
+	%if HPS_WholeStrlen > HPS_PartStrlen
+		%rep (HPS_WholeStrlen-HPS_PartStrlen)
+			%substr HPS_TestStr %2 HPS_counter,HPS_PartStrlen	
+			MGR_strcmp HPS_TestStr, %3,HPS_IS_EQUAL
+			%ifdef HPS_IS_EQUAL
+				%xdefine %1
+				%undef HPS_IS_EQUAL
+			%endif
+			%assign HPS_counter (HPS_counter+1)
+		%endrep
+	%endif
+%endmacro
 
 %macro force_call 1
 	%unmacro call 1
@@ -626,6 +789,36 @@
 		%error moving data before updating the stack pointer is very risky!!
 	%endif
 %endmacro
+
+%macro movzx 2
+	%ifdef DISABLE_INST_MACRO_MOV
+		movzx %1, %2
+	%else
+		%if NUM_STACKS_OPEN = 0
+			movzx %1, %2
+		%else
+			CheckUpdateStackPtr
+			FindAndReplaceLocalVar %1, OP0
+			%ifdef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%undef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%error Cannot rewrite a fixed address!
+			%else
+				FindAndReplaceLocalVar %2, OP1
+				%ifdef FARLV_LOAD_EFFECTIVE_ADDRESS
+					%error cannot load zero extended effective address	
+					%undef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%else
+					movzx OP0, OP1
+				%endif
+				
+				%undef OP0
+				%undef OP1
+			%endif
+			%undef OP0
+		%endif
+	%endif
+%endmacro
+
 %macro mov 2
 	%ifdef DISABLE_INST_MACRO_MOV
 		mov %1, %2
@@ -641,17 +834,30 @@
 			%else
 				FindAndReplaceLocalVar %2, OP1
 				%ifdef FARLV_LOAD_EFFECTIVE_ADDRESS
-					mov OP0, rbp
-					sub OP0, OP1	
+					%ifn OP0_SIZE < 8
+						mov OP0, rbp
+						sub OP0, OP1	
+					%else
+						%error %1 is only of size OP0_SIZE but needs to be 8 bytes large to hold an effective address
+						%error mov OP0, rbp 	World overwrite sensitive data
+					%endif
 					%undef FARLV_LOAD_EFFECTIVE_ADDRESS
 				%else
-					mov OP0, OP1
+					%if OP0_SIZE >= OP1_SIZE
+						mov OP0, OP1
+					%else
+						%error %1 is only of size OP0_SIZE but %2 is of size OP1_SIZE
+						%error mov %1, %2 Would overwrite sensitive data!
+					%endif
 				%endif
 				
 				%undef OP0
 				%undef OP1
 			%endif
 			%undef OP0
+			%undef OP1
+			%undef OP0_SIZE
+			%undef OP1_SIZE
 		%endif
 	%endif
 %endmacro
@@ -714,6 +920,29 @@
 	%undef CAWS_strlen
 	%undef CAWS_char
 %endmacro
+
+;1 = name of to define if true, 2 = first string, 3 = secStr
+%macro MultipleStrCmp 3-*
+	%xdefine MSC_TODEFINE %1
+	%xdefine MSC_FRSTSTR %2
+
+	%rep (%0-2)
+		%ifstr %3
+			MGR_strcmp MSC_FRSTSTR, %3, MSC_IS_EQUAL
+			%ifdef MSC_IS_EQUAL
+				%undef MSC_IS_EQUAL
+				DepthDefine MSC_TODEFINE
+			%endif
+		%endif
+		%rotate 1
+	%endrep
+	%undef MSC_TODEFINE
+	%undef MSC_FRSTSTR
+%endmacro
+
+%macro DepthDefine 1
+	%xdefine %1
+%endmacro
 							
 ;1 = expression, 2 = Fixed Token name
 %macro FindAndReplaceLocalVar 2
@@ -721,6 +950,8 @@
 	%defstr FARLV_KlopStr %1
 	CutAllWhiteSpace UnderlyingStr, FARLV_KlopStr
 	%undef FARLV_KlopStr
+	%undef %2_SIZE
+	DeductType %2_SIZE, UnderlyingStr
 
 	%assign FARLV_counter 1
 	%assign FARLV_counter_end 1
@@ -816,7 +1047,7 @@
 					%assign ILOOP_counter 2
 					%assign ILOOP_link 3
 					
-					%rep 100
+					%rep 15
 						%xdefine FARLV_checkDefine 'FARLV_STR'
 						%defstr FARLV_checkDefineVar ILOOP_counter
 						%strcat FARLV_checkDefine FARLV_checkDefine, FARLV_checkDefineVar
@@ -840,7 +1071,6 @@
 						%endif
 					%endif
 	
-					%undef FARLV_DEDUCT_TYPE
 	
 					%undef FARLV_checkDefine
 					%undef FARLV_checkDefineVar
@@ -862,6 +1092,11 @@
 
 				%deftok FARLV_realoffset FARLV_var
 
+				%ifdef %2_SIZE
+					%xdefine FARLV_MEM_ACCESS %2_SIZE
+					%xdefine %2_SIZE FARLV_DEDUCT_TYPE
+				%endif				
+
 				%ifdef FARLV_MEM_ACCESS
 					%xdefine FARLV_complete rbp - (FARLV_realoffset)
 					%defstr FARLV_completestr FARLV_complete
@@ -871,10 +1106,13 @@
 					%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_endStr
 					%deftok %2 FARLV_ENDSTR
 				%else
+
 					%xdefine %2 FARLV_realoffset
 					%xdefine FARLV_LOAD_EFFECTIVE_ADDRESS
+				
 				%endif
-
+					
+				%undef FARLV_DEDUCT_TYPE
 				%undef FARLV_endStr
 				%undef FARLV_ENDSTR
 				%undef FARLV_realoffset

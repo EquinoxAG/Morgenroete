@@ -1,7 +1,7 @@
 %include "morgenroete.inc"
 
 
-interface ThirdStruc, kollaps, qword
+interface ThirdStruc, kollaps, word
 interface ThirdStruc, Mongo, dword
 
 interface MyStruc, string, dword
@@ -27,15 +27,13 @@ global main
 main:
 	CreateStack myStack
 	ReserveStackSpace Mokkla, seq, rax, rdx
-	ReserveStackSpace Lokla, seq,dword[Mokkla.intY.tod.Mongo], rdx
+	ReserveStackSpace Lokla, seq,[Mokkla.intY.tod.Mongo], [Mokkla.intY.tod.kollaps]
 	UpdateStackPtr
 
-	mov rax, Mokkla.intY.tod.Mongo
+	mov rax, Mokkla.intY.tod
 
 	DestroyStack myStack
-
 	ret
-
 
 MyIntok:
 	dq 0, 0, 0
