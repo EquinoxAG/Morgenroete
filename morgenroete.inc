@@ -5,6 +5,21 @@
 
 ;----------------------------- CALLING Conventions --------------------------
 
+%ifndef byte_size
+	%xdefine byte_size 1
+%endif
+
+%ifndef word_size
+	%xdefine word_size 2
+%endif
+
+%ifndef dword_size
+	%xdefine dword_size 4
+%endif
+
+%ifndef qword_size
+	%xdefine qword_size 8
+%endif
 
 %macro move_if_unequal 2
 	%defstr MIU_Tok0 %1
@@ -18,6 +33,7 @@
 	%undef MIU_Tok1
 
 %endmacro
+
 
 %macro STDCALL_VX64GCC 1-*
 	%xdefine CALL_FUNC %1	
@@ -63,7 +79,7 @@
 		%endrep
 	%endif
 
-	call CALL_FUNC
+	force_call CALL_FUNC
 
 	%if %0 > 7
 		add rsp, (%0-7)*8
@@ -72,36 +88,84 @@
 
 %define STD_CALLING_CONVENTION STDCALL_VX64GCC
 
-%macro DefineSTDCALLGCC 1
-	%define %1_CALLING_CONVENTION STDCALL_VX64GCC
+%macro force_call 1
+	%unmacro call 1
+	call %1
+	%macro call 1
+		%error normal calls are for security reasons and type safety disabled please use force_call if you really want to call with the unsafe method
+	%endmacro
 %endmacro
+
+%macro call 1
+	%error normal calls are for security reasons and type safety disabled please use force_call if you really want to call with the unsafe method
+%endmacro
+
+; 1 = function name, 2 = parameter count
+%macro CheckParameterCount 2
+	%ifndef %1_CALLING_CONVENTION
+		%error %1
+		%error Unknown function specification, please specify the function by calling DEFINE_CALL
+	%else
+		%assign PAR_CNT %2
+		%ifndef %1_VARIABLE_CALL
+			%ifn %2 = %1_PARAMETER_COUNT
+				%error The function %1 expects %1_PARAMETER_COUNT parameters not PAR_CNT
+			%endif
+		%else
+			%ifn %2 > (%1_PARAMETER_COUNT-1)
+				%error The function %1 takes at least %1_PARAMETER_COUNT parameters not only PAR_CNT
+			%endif
+		%endif
+		%undef PAR_CNT
+	%endif
+%endmacro
+
+;1 = function name, 2 = parameter count, 3 = calling convention
+%macro DEFINE_CALL 2-3 STDCALL_VX64GCC
+	%xdefine %1_CALLING_CONVENTION %3
+	%xdefine %1_PARAMETER_COUNT %2
+	%undef %1_VARIABLE_CALL
+%endmacro
+
+;a call which needs at leat %2 parameters
+%macro DEFINE_VARIABLECALL 2-3 STDCALL_VX64GCC
+	%xdefine %1_CALLING_CONVENTION %3
+	%xdefine %1_PARAMETER_COUNT %2
+	%xdefine %1_VARIABLE_CALL 1
+%endmacro
+
+
 
 ;---------------------------------------------------------------------------
 
 ;1 = interface name, 2 = type_name, 3 = type offset, 4 = type length
 %macro interface 4
-	%ifdef %1_size
-		%if %1_size < (%3+%4)
-			%xdefine %1_size (%3+%4)
-			%xdefine %1.%2 %3
-			%xdefine %1_%2_LENGTH %4
-		%else
-			%xdefine %1.%2 %3
-			%xdefine %1_%2_LENGTH %4
-		%endif
-		%assign %1_parameter (%1_parameter+1)
-		RegisterByNum %1, %1_parameter, %2
+	%ifnum %4
+		%error The type length must be a structure, byte, word, dword, qword are defined as simple structures
 	%else
-		%xdefine %1_size (%3+%4)
-		%xdefine %1.%2 %3
-		%xdefine %1_%2_LENGTH %4
-		%assign %1_parameter 1
-		%xdefine %1_constructor_pc 0
-		RegisterByNum %1, %1_parameter, %2
+		%ifdef %1_size
+			%if %1_size < (%3+%4_size)
+				%xdefine %1_size (%3+%4_size)
+				%xdefine %1.%2 %3
+				%xdefine %1_%2_STRUCTURE %4
+			%else
+				%xdefine %1.%2 %3
+				%xdefine %1_%2_STRUCTURE %4
+			%endif
+			%assign %1_parameter (%1_parameter+1)
+			RegisterByNum %1, %1_parameter, %2
+		%else
+			%xdefine %1_size (%3+%4_size)
+			%xdefine %1.%2 %3
+			%xdefine %1_%2_STRUCTURE %4
+			%assign %1_parameter 1
+			RegisterByNum %1, %1_parameter, %2
+		%endif
+
 	%endif
 %endmacro
 
-%macro interface_constructor 3
+%macro interface_constructor 2
 	%ifndef %1_size
 		%error No interface with the name %1
 	%else
@@ -109,7 +173,6 @@
 			%warning Overwriting the constructor of the interface %1
 		%endif
 		%xdefine %1_constructor %2
-		%xdefine %1_constructor_pc %3
 	%endif
 %endmacro
 
@@ -120,7 +183,8 @@
 		%ifdef %1_destructor
 			%warning Overwriting the destructor of the interface %1
 		%endif
-			%xdefine %1_destructor %2
+	
+		%xdefine %1_destructor %2
 	%endif
 %endmacro
 
@@ -130,14 +194,16 @@
 %endmacro
 
 ;name, num
-%macro UnregisterByNum 2
-	InDepthUnregister %1, %1_%2 
+%macro UnregisterByNum 3
+	InDepthUnregister %1, %1_%2, %3
 	%undef %1_%2
 %endmacro
 
-%macro InDepthUnregister 2
+%macro InDepthUnregister 3
 	%undef %1.%2
-	%undef %1_%2_LENGTH
+	%ifdef %1_%2_STRUCTURE
+		%undef %1_%2_STRUCTURE
+	%endif
 %endmacro
 
 ;1 = name
@@ -147,7 +213,6 @@
 	%else
 		%undef %1_size
 		%undef %1_constructor
-		%undef %1_constructor_pc
 		%undef %1_destructor
 
 		%assign counter 1
@@ -175,7 +240,7 @@
 %endmacro
 
 %macro UndefByNum 3
-	InDepthUnregister %1, %2_%3
+	InDepthUnregister %1, %2_%3, %2
 %endmacro
 
 %macro InDepthDefine 3
@@ -206,7 +271,6 @@
 		%undef counter
 	%endif
 %endmacro
-
 
 
 %macro InternUnconnectHeapFromInterface 2
@@ -291,15 +355,12 @@
 			%xdefine %$%1_STRUC %2
 
 			%ifdef %2_constructor
-				%ifn (%0-3) = %2_constructor_pc
-					%assign ArgNum (%0-3)
-					%error The constructor of the struct %2 takes %2_constructor_pc arguments, not ArgNum
-					%undef ArgNum
-				%else
-					%ifn %2_constructor_pc = 0
-						DefineNewStr %$%1_CONSTRUCTOR_LIST, %{4:-1}
-					%endif
+				CheckParameterCount %2_constructor, (%0-2)
+				
+				%ifn %0 = 3
+					DefineNewStr %$%1_CONSTRUCTOR_LIST, %{4:-1}
 				%endif
+			
 
 			
 
@@ -392,9 +453,13 @@
 	sub rbx, %1
 	
 	%ifdef %2_CALLING_CONVENTION
-		%2_CALLING_CONVENTION %2,rbx
+		%ifn %2_PARAMETER_COUNT = 1
+			%error The destructor function %2 must only take 1 parameter but takes %2_PARAMETER_COUNT instead
+		%else
+			%2_CALLING_CONVENTION %2,rbx
+		%endif
 	%else
-		STD_CALLING_CONVENTION %2,rbx
+		%error Trying to call function %2 without verifyed parameter count or calling convention
 	%endif
 %endmacro
 
@@ -443,17 +508,17 @@
 	sub rbx, %1
 	
 	%ifdef %2_CALLING_CONVENTION
-		%if %3_constructor_pc > 0
-			%2_CALLING_CONVENTION %2,rbx,%{4:-1}
+		%if %2_PARAMETER_COUNT = (%0-2)
+			%if %2_PARAMETER_COUNT > 1
+				%2_CALLING_CONVENTION %2,rbx,%{4:-1}
+			%else
+				%2_CALLING_CONVENTION %2,rbx
+			%endif
 		%else
-			%2_CALLING_CONVENTION %2,rbx
+			%error The constructor function %2 expects %2_PARAMETER_COUNT instead of (%0-3) arguments
 		%endif
 	%else
-		%if %3_constructor_pc > 0
-			STD_CALLING_CONVENTION %2,rbx,%{4:-1}
-		%else
-			STD_CALLING_CONVENTION %2,rbx
-		%endif
+		%error Trying to call function without verifyed parameter count or calling convention
 	%endif
 %endmacro
 
@@ -464,13 +529,16 @@
 	%xdefine DSBC_is_sth 0
 	
 	%rep DSBC_strlen
-		%substr DSBC_current_char %1 DSBC_counter
-		%if DSBC_current_char = %2
-			%substr %3 %1 1, (DSBC_counter-1)
-			%substr %4 %1 (DSBC_counter+1), DSBC_strlen
-			%xdefine DSBC_is_sth 1
+		%if DSBC_is_sth = 0
+			%substr DSBC_current_char %1 DSBC_counter
+			%if DSBC_current_char = %2
+				%substr %3 %1 1, (DSBC_counter-1)
+				%substr %4 %1 (DSBC_counter+1), DSBC_strlen
+				%xdefine DSBC_is_sth 1
+				
+			%endif
+			%xdefine DSBC_counter (DSBC_counter+1)
 		%endif
-		%xdefine DSBC_counter (DSBC_counter+1)
 	%endrep
 	
 	%if DSBC_is_sth = 0
@@ -483,6 +551,42 @@
 	%undef DSBC_strlen
 	%undef DSBC_current_char
 %endmacro
+
+%macro DSBC_IDD 3
+	%xdefine %1%2 %3
+%endmacro
+
+%macro DivideStringsByChar 3
+	%assign DSBC_counter 1
+	%strlen DSBC_strlen %1
+	%assign DSBC_is_sth 0
+
+	%assign DSBC_strStart 1
+	
+	%rep DSBC_strlen
+		%substr DSBC_current_char %1 DSBC_counter
+		%if DSBC_current_char = %2
+			%substr DSBC_SBSTR %1 DSBC_strStart, (DSBC_counter-DSBC_strStart)
+			DSBC_IDD %3,DSBC_is_sth,DSBC_SBSTR
+			%assign DSBC_strStart (DSBC_counter+1)	
+			%assign DSBC_is_sth (DSBC_is_sth+1)	
+		%endif
+		%assign DSBC_counter (DSBC_counter+1)		
+	%endrep
+	
+	%substr DSBC_SBSTR %1 DSBC_strStart, DSBC_strlen
+	DSBC_IDD %3, DSBC_is_sth, DSBC_SBSTR
+
+	%undef DSBC_SBSTR
+	%undef DSBC_strStart
+	
+	%undef DSBC_is_sth
+
+	%undef DSBC_counter
+	%undef DSBC_strlen
+	%undef DSBC_current_char
+%endmacro
+
 
 %macro mov_stack 2
 		FindAndReplaceLocalVar %1, OP0
@@ -543,11 +647,42 @@
 	%undef MGRSTRLEN_strlen0
 	%undef MGRSTRLEN_strlen1
 %endmacro
+%macro ILOOP_DEFINER 2
+	%deftok FARLV_ending %1
+	%xdefine FARLV_together FARLV_nextLink %+ . %+ FARLV_ending
+	%strcat FARLV_offsetstr FARLV_offsetstr,'+'	
+	%defstr FARLV_newOffset FARLV_together
+	%strcat FARLV_offsetstr FARLV_offsetstr, FARLV_newOffset
+	%xdefine FARLV_nextLink FARLV_nextLink %+ _ %+ FARLV_ending %+ _STRUCTURE
+	%undef FARLV_newOffset
+	%undef FARLV_together
+%endmacro
 
+;1=name of to define, 2=string
+%macro CutAllWhiteSpace 2
+	%assign CAWS_counter 1
+	%strlen CAWS_strlen %2
+	%xdefine %1 ''
+	%rep CAWS_strlen
+		%substr CAWS_char %2 CAWS_counter
+		%ifn CAWS_char = ' '
+			%strcat %1 %1, CAWS_char	
+		%endif
+		%assign CAWS_counter (CAWS_counter+1)
+	%endrep
+
+	%undef CAWS_counter
+	%undef CAWS_strlen
+	%undef CAWS_char
+%endmacro
+							
 ;1 = expression, 2 = Fixed Token name
 %macro FindAndReplaceLocalVar 2
 	%xdefine %2 %1
-	%defstr UnderlyingStr %1
+	%defstr FARLV_KlopStr %1
+	CutAllWhiteSpace UnderlyingStr, FARLV_KlopStr
+	%undef FARLV_KlopStr
+
 	%assign FARLV_counter 1
 	%assign FARLV_counter_end 1
 	%strlen FARLV_strlen UnderlyingStr
@@ -558,7 +693,9 @@
 			%xdefine FARLV_SUSPECT
 		%elif FARLV_character = ']'
 			%xdefine FARLV_SUSPECT
-		%elif FARLV_character = ' '
+		%elif FARLV_character = '+'
+			%xdefine FARLV_SUSPECT
+		%elif FARLV_character = '-'
 			%xdefine FARLV_SUSPECT
 		%elif FARLV_counter_end = FARLV_strlen
 			%xdefine FARLV_SUSPECT
@@ -568,16 +705,63 @@
 		%ifdef FARLV_SUSPECT	
 			%undef FARLV_SUSPECT
 			%substr FARLV_varstr UnderlyingStr FARLV_counter, (FARLV_counter_end-FARLV_counter)
-			
+	
+			%xdefine FARLV_DeductType FARLV_varstr
+			%strcat FARLV_DeductType FARLV_DeductType,FARLV_character
+
+			MGR_strcmp FARLV_DeductType, 'byte[', FARLV_MEM_BYTE		
+			MGR_strcmp FARLV_DeductType, 'word[', FARLV_MEM_WORD
+			MGR_strcmp FARLV_DeductType, 'dword[', FARLV_MEM_DWORD
+			MGR_strcmp FARLV_DeductType, 'qword[', FARLV_MEM_QWORD
+
+			%ifdef FARLV_MEM_BYTE
+				%undef FARLV_MEM_BYTE
+				%xdefine FARLV_MEM_ACCESS 1
+				%xdefine FARLV_MEM_ACCESS_STR byte
+			%elifdef FARLV_MEM_WORD
+				%undef FARLV_MEM_WORD
+				%xdefine FARLV_MEM_ACCESS 2
+				%xdefine FARLV_MEM_ACCESS_STR word
+			%elifdef FARLV_MEM_DWORD
+				%undef FARLV_MEM_DWORD
+				%xdefine FARLV_MEM_ACCESS 4
+				%xdefine FARLV_MEM_ACCESS_STR dword
+			%elifdef FARLV_MEM_QWORD
+				%undef FARLV_MEM_QWORD
+				%xdefine FARLV_MEM_ACCESS 8
+				%xdefine FARLV_MEM_ACCESS_STR qword
+			%endif
+
+			%undef FARLV_DeductType
+
+
 			%undef FARLV_STR0
 			%undef FARLV_STR1
-			DivideStringsByChar FARLV_varstr,'.',FARLV_STR0,FARLV_STR1 
+			%undef FARLV_STR2
+			%undef FARLV_STR3
+			%undef FARLV_STR4
+			%undef FARLV_STR5
+			%undef FARLV_STR6
+			%undef FARLV_STR7
+			%undef FARLV_STR8
+			%undef FARLV_STR9
+			%undef FARLV_STR10
+			%undef FARLV_STR11
+			%undef FARLV_STR12
+			%undef FARLV_STR13
+			%undef FARLV_STR14
+			%undef FARLV_STR15
+			%undef FARLV_STR16
+			%undef FARLV_STR17
+			%undef FARLV_STR18	;Enable recursion of strings till depth of 18
+			
+			DivideStringsByChar FARLV_varstr,'.',FARLV_STR 
 		
 			%strcat FARLV_STR0 '%$', FARLV_STR0
 			%strcat FARLV_var FARLV_STR0, '_VAR'
 		
 			IsLocalDefined VAR_EXISTS, FARLV_var
-	
+
 			%ifdef VAR_EXISTS
 				%undef VAR_EXISTS	
 				%ifdef FARLV_STR1
@@ -585,10 +769,48 @@
 					%deftok FARLV_ending FARLV_STR1
 					%deftok FARLV_beg FARLV_struc
 					%xdefine FARLV_together FARLV_beg %+ . %+ FARLV_ending
+					%xdefine FARLV_nextLink FARLV_beg %+ _ %+ FARLV_ending %+ _STRUCTURE
 					%defstr FARLV_offsetstr FARLV_together
+					%strcat FARLV_offsetstr '(', FARLV_offsetstr
+
+					%assign ILOOP_counter 2
+					%assign ILOOP_link 3
+					
+					%rep 100
+						%xdefine FARLV_checkDefine 'FARLV_STR'
+						%defstr FARLV_checkDefineVar ILOOP_counter
+						%strcat FARLV_checkDefine FARLV_checkDefine, FARLV_checkDefineVar
+					
+						IsLocalDefined VAR_EXISTS, FARLV_checkDefine
+
+						%ifdef VAR_EXISTS
+							ILOOP_DEFINER FARLV_STR %+ ILOOP_counter, FARLV_STR %+ ILOOP_link
+							
+						
+							%assign ILOOP_counter (ILOOP_counter+1)
+							%assign ILOOP_link (ILOOP_link+1)
+						%endif
+						%undef VAR_EXISTS
+					%endrep
+
+					%xdefine FARLV_DEDUCT_TYPE FARLV_nextLink %+ _size
+					%if FARLV_DEDUCT_TYPE < FARLV_MEM_ACCESS
+						%error Trying to access a FARLV_nextLink variable as like a FARLV_MEM_ACCESS_STR variable
+					%endif
+	
+					%undef FARLV_DEDUCT_TYPE
+	
+					%undef FARLV_checkDefine
+					%undef FARLV_checkDefineVar
+					%undef ILOOP_counter
+					%undef ILOOP_link
+
+
 					%strcat FARLV_var FARLV_var, '-'
 					%strcat FARLV_var FARLV_var, FARLV_offsetstr
-				
+					%strcat FARLV_var FARLV_var,')'
+		
+					%undef FARLV_nextLink	
 					%undef FARLV_ending
 					%undef FARLV_STR1
 					%undef FARLV_beg
@@ -601,10 +823,10 @@
 				%defstr FARLV_completestr FARLV_complete
 				%substr FARLV_ENDSTR UnderlyingStr 1,(FARLV_counter-1)
 				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_completestr
-				%substr FARLV_endStr UnderlyingStr (FARLV_counter_end+1),(FARLV_strlen-FARLV_counter_end)
+				%substr FARLV_endStr UnderlyingStr (FARLV_counter_end),((FARLV_strlen+1)-FARLV_counter_end)
 				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_endStr
 				%deftok %2 FARLV_ENDSTR
-	
+
 				%undef FARLV_endStr
 				%undef FARLV_ENDSTR
 				%undef FARLV_realoffset
@@ -622,6 +844,8 @@
 	%undef UnderlyingStr
 	%undef FARLV_counter_end
 	%undef FARLV_counter
+	%undef FARLV_MEM_ACCESS
+	%undef FARLV_MEM_ACCESS_STR
 %endmacro
 
 %macro UpdateStackPtr 0

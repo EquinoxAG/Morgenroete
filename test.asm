@@ -1,33 +1,36 @@
 %include "morgenroete.inc"
 
-interface MyStruc, string, 4
-interface MyStruc, welt, 8
-interface MyStruc, tod, 12
-interface seq, intX, 4
-interface seq, intY, 4
-interface_constructor MyStruc, main, 2
+
+interface ThirdStruc, kollaps, qword
+interface ThirdStruc, Mongo, dword
+
+interface MyStruc, string, dword
+interface MyStruc, welt, qword
+interface MyStruc, tod, ThirdStruc
+interface seq, intX, dword
+interface seq, intY, MyStruc
+
+
+interface_constructor MyStruc, main
 interface_destructor MyStruc, destu
 interface_destructor seq, destu
+
+
+DEFINE_CALL main, 3
+DEFINE_CALL destu, 1
 
 destu:
 global main
 main:
-	mov rax, MyStruc.string
-	mov rbx, MyStruc.welt
-	mov rcx, MyStruc.tod
-	mov rdx, MyStruc_size
+	CreateStack myStack
+	ReserveStackSpace Mokkla, seq
 
-	CreateStack myS
-	ReserveStackSpace Okax, MyStruc, rax, rdx
-	ReserveStackSpace Okkox, MyStruc, 100, 200
-	ReserveStackSpace Olax, seq
+	mov qword[ Mokkla.intY.tod.Mongo+100 ], rax
 
-	mov qword[ Olax.intY ], rax
-	mov qword[ Okax.tod ], rbx
-	DestroyStack myS
+	DestroyStack myStack
+
 	ret
 
 
 MyIntok:
-	.welt:
 	dq 0, 0, 0
