@@ -25,8 +25,12 @@
 	%defstr MIU_Tok0 %1
 	%defstr MIU_Tok1 %2
 
-	%ifn MIU_Tok0 = MIU_Tok1
+	MGR_strcmp MIU_Tok0, MIU_Tok1, MIU_IS_EQUAL
+
+	%ifndef MIU_IS_EQUAL
 		mov %1, %2
+	%else
+		%undef MIU_IS_EQUAL
 	%endif
 	
 	%undef MIU_Tok0
@@ -320,15 +324,18 @@
 	%endif
 %endmacro
 
-%macro ReserveStackSpace 2-*
-	%if %0 < 3
+%macro ReserveStackSpace 2
 		InternReserveStackSpace %1, %2, %$STACK_NAME
-	%else
-		InternReserveStackSpace %1, %2, %$STACK_NAME, %{3:-1}
-	%endif
 %endmacro
 
-%macro InternReserveStackSpace 3-*
+
+%macro ReserveStackSpace 3+
+		%defstr RSSArgList %3
+		InternReserveStackSpace %1, %2, %$STACK_NAME, RSSArgList
+		%undef RSSArgList
+%endmacro
+
+%macro InternReserveStackSpace 3-4
 	%ifndef STACK_NAME_%3
 		%error No current Stack available
 	%else
@@ -355,10 +362,11 @@
 			%xdefine %$%1_STRUC %2
 
 			%ifdef %2_constructor
-				CheckParameterCount %2_constructor, (%0-2)
-				
+			
 				%ifn %0 = 3
-					DefineNewStr %$%1_CONSTRUCTOR_LIST, %{4:-1}
+					%deftok IRSSTOKENIZE %4
+					DefineNewStr %$%1_CONSTRUCTOR_LIST, IRSSTOKENIZE
+					%undef IRSSTOKENIZE
 				%endif
 			
 
@@ -503,19 +511,30 @@
 	%endrep
 %endmacro
 
-%macro InDepthCall 4-*
+;1 = To define is equal, 2 = count, 
+%macro IfCountEqual 2-*
+	%if (%0-2) = %2
+		%define %1
+	%endif
+%endmacro
+
+%macro InDepthCall 4+
 	mov rbx, rbp
 	sub rbx, %1
 	
 	%ifdef %2_CALLING_CONVENTION
-		%if %2_PARAMETER_COUNT = (%0-2)
+		IfCountEqual IS_EQUAL_NOW, %2_PARAMETER_COUNT-1, %4
+		%ifdef IS_EQUAL_NOW
+			%undef IS_EQUAL_NOW
 			%if %2_PARAMETER_COUNT > 1
-				%2_CALLING_CONVENTION %2,rbx,%{4:-1}
+				%2_CALLING_CONVENTION %2,rbx,%4
 			%else
 				%2_CALLING_CONVENTION %2,rbx
 			%endif
 		%else
-			%error The constructor function %2 expects %2_PARAMETER_COUNT instead of (%0-3) arguments
+			%assign IDC_PAR_CNT (%0-3)
+			%error The constructor function %2 expects %2_PARAMETER_COUNT instead of IDC_PAR_CNT arguments
+			%undef IDC_PAR_CNT
 		%endif
 	%else
 		%error Trying to call function without verifyed parameter count or calling convention
@@ -598,8 +617,15 @@
 		%undef OP1
 %endmacro
 
+%macro CheckUpdateStackPtr 0
+	InternCheckUpdateStackPtr %$STACK_NAME
+%endmacro
 
-
+%macro InternCheckUpdateStackPtr 1
+	%ifn STACK_SPACE_%1_CURRENT = STACK_SPACE_%1_FLOATING
+		%error moving data before updating the stack pointer is very risky!!
+	%endif
+%endmacro
 %macro mov 2
 	%ifdef DISABLE_INST_MACRO_MOV
 		mov %1, %2
@@ -607,12 +633,25 @@
 		%if NUM_STACKS_OPEN = 0
 			mov %1, %2
 		%else
-			UpdateStackPtr
+			CheckUpdateStackPtr
 			FindAndReplaceLocalVar %1, OP0
-			FindAndReplaceLocalVar %2, OP1
-			mov OP0, OP1
+			%ifdef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%undef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%error Cannot rewrite a fixed address!
+			%else
+				FindAndReplaceLocalVar %2, OP1
+				%ifdef FARLV_LOAD_EFFECTIVE_ADDRESS
+					mov OP0, rbp
+					sub OP0, OP1	
+					%undef FARLV_LOAD_EFFECTIVE_ADDRESS
+				%else
+					mov OP0, OP1
+				%endif
+				
+				%undef OP0
+				%undef OP1
+			%endif
 			%undef OP0
-			%undef OP1
 		%endif
 	%endif
 %endmacro
@@ -764,6 +803,7 @@
 
 			%ifdef VAR_EXISTS
 				%undef VAR_EXISTS	
+
 				%ifdef FARLV_STR1
 					%strcat FARLV_struc FARLV_STR0, '_STRUC'
 					%deftok FARLV_ending FARLV_STR1
@@ -794,8 +834,10 @@
 					%endrep
 
 					%xdefine FARLV_DEDUCT_TYPE FARLV_nextLink %+ _size
-					%if FARLV_DEDUCT_TYPE < FARLV_MEM_ACCESS
-						%error Trying to access a FARLV_nextLink variable as like a FARLV_MEM_ACCESS_STR variable
+					%ifdef FARLV_MEM_ACCESS
+						%if FARLV_DEDUCT_TYPE < FARLV_MEM_ACCESS
+							%error Trying to access a FARLV_nextLink variable as like a FARLV_MEM_ACCESS_STR variable
+						%endif
 					%endif
 	
 					%undef FARLV_DEDUCT_TYPE
@@ -819,13 +861,19 @@
 				%endif			
 
 				%deftok FARLV_realoffset FARLV_var
-				%xdefine FARLV_complete rbp - (FARLV_realoffset)
-				%defstr FARLV_completestr FARLV_complete
-				%substr FARLV_ENDSTR UnderlyingStr 1,(FARLV_counter-1)
-				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_completestr
-				%substr FARLV_endStr UnderlyingStr (FARLV_counter_end),((FARLV_strlen+1)-FARLV_counter_end)
-				%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_endStr
-				%deftok %2 FARLV_ENDSTR
+
+				%ifdef FARLV_MEM_ACCESS
+					%xdefine FARLV_complete rbp - (FARLV_realoffset)
+					%defstr FARLV_completestr FARLV_complete
+					%substr FARLV_ENDSTR UnderlyingStr 1,(FARLV_counter-1)
+					%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_completestr
+					%substr FARLV_endStr UnderlyingStr (FARLV_counter_end),((FARLV_strlen+1)-FARLV_counter_end)
+					%strcat FARLV_ENDSTR FARLV_ENDSTR, FARLV_endStr
+					%deftok %2 FARLV_ENDSTR
+				%else
+					%xdefine %2 FARLV_realoffset
+					%xdefine FARLV_LOAD_EFFECTIVE_ADDRESS
+				%endif
 
 				%undef FARLV_endStr
 				%undef FARLV_ENDSTR
