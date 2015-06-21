@@ -1,38 +1,41 @@
-%include "morgenroete.inc"
+%include "Morgenroetev1.inc"
+
+interface_open multiboot
+	interface sig, qword
+	interface rev, dword 
+interface_close
 
 
-interface ThirdStruc, kollaps, word
-interface ThirdStruc, Mongo, dword
+interface_open point
+	interface x_coord, qword
+	interface y_coord, qword
+	interface z_coord, qword
+interface_close
 
-interface MyStruc, string, dword
-interface MyStruc, welt, qword
-interface MyStruc, tod, ThirdStruc
-interface seq, intX, dword
-interface seq, intY, MyStruc
+interface_open multiboot2
+	DeriveInterface multiboot
+	interface point3D, point
+interface_close
 
-
-interface_constructor MyStruc, main
-interface_destructor MyStruc, destu
-interface_constructor seq, main
-interface_destructor seq, destu
-
-
-DEFINE_CALL main, 3
-DEFINE_CALL destu, 1
-
-
+interface_open multiboot
+	interface mb2, multiboot2
+interface_close
 
 destu:
 global main
 main:
-	CreateStack myStack
-	ReserveStackSpace Mokkla, seq, rax, rdx
-	ReserveStackSpace Lokla, seq,[Mokkla.intY.tod.Mongo], [Mokkla.intY.tod.kollaps]
-	UpdateStackPtr
+	mov rax, multiboot.sig
+	mov rbx, multiboot.rev
+	mov rcx, multiboot2.rev
+	
 
-	mov rax, Mokkla.intY.tod
 
-	DestroyStack myStack
+	ConnectHeapToInterface MyIntok, multiboot
+
+	mov_ts rax, qword[ MyIntok.mb2.point3D.z_coord + MyIntok.rev ]
+
+	uninterface multiboot
+	mov rdx, multiboot2.sig
 	ret
 
 MyIntok:
