@@ -27,7 +27,7 @@ global main
 main:
 	CreateStack myStack
 	ReserveStackSpace Mokkla, seq, rax, rdx
-	ReserveStackSpace Lokla, seq,[Mokkla.intY.tod.Mongo], [Mokkla.intY.tod.kollaps]
+	ReserveStackSpace Lokla, seq,[Mokkla.intY.tod.Mongo], Mokkla.intY.tod.kollaps
 	UpdateStackPtr
 
 	mov rax, Mokkla.intY.tod
