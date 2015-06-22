@@ -208,6 +208,25 @@
 	%endif
 %endmacro
 
+;1 = name of the interface, to define if interface
+%macro IsInterface 2
+	%strcat II_TryStr %1,'_parameter'
+	%deftok II_TryTok II_TryStr
+	%defstr II_castStr II_TryTok
+
+	MGRStrcmp II_TryStr, II_castStr, %2
+
+	%ifdef %2
+		%undef %2
+	%else
+		%xdefine %2
+	%endif
+
+	%undef II_TryStr
+	%undef II_castStr
+	%undef II_TryTok
+%endmacro
+
 ;1=string of possible variable;2=To define if defined
 %macro IsConnectedToHeap 2
 	%xdefine ISCTH_str %1
@@ -236,6 +255,14 @@
 
 	%rep TraverseInterfaceChain_NumInterfaces
 		%xdefine TIC_CurrentMember TraverseInterfaceChain_Member %+ TraverseInterfaceChain_counter
+		HasPartStr TIC_CastStructure, TIC_CurrentMember, '->'
+		%ifdef TIC_CastStructure
+			%undef TIC_CastStructure
+			PartStringsByChar TIC_CurrentMember, '->', TIC_RealCurrentMember, TIC_CurrentStructure
+			%xdefine TIC_CurrentMember TIC_RealCurrentMember
+		
+			%undef TIC_RealCurrentMember
+		%endif
 		%deftok TIC_CurrentMemberTok TIC_CurrentMember
 		%xdefine TIC_CurrentOffset TraverseInterfaceChain_currentStruc %+ . %+ TIC_CurrentMemberTok
 		%defstr TIC_CurrentOffsetStr TIC_CurrentOffset
@@ -248,8 +275,33 @@
 
 		%strcat TraverseInterfaceChain_totaloffset TraverseInterfaceChain_totaloffset, TIC_CurrentOffsetStr
 
-		%xdefine TraverseInterfaceChain_currentStruc TraverseInterfaceChain_currentStruc %+ _ %+ TIC_CurrentMemberTok %+ _STRUCTURE
+		%ifndef TIC_CurrentStructure
+			%xdefine TraverseInterfaceChain_currentStruc TraverseInterfaceChain_currentStruc %+ _ %+ TIC_CurrentMemberTok %+ _STRUCTURE
+		%else
+			%deftok TraverseInterfaceChain_currentStruc TIC_CurrentStructure
+			%undef TIC_CurrentStructure
+		%endif
+
 		
+		%defstr TIC_CrrStr TraverseInterfaceChain_currentStruc
+		MultipleStrCmp TIC_IsLowType, TIC_CrrStr, 'qword', 'dword', 'word', 'byte'
+
+		%ifndef TIC_IsLowType
+			IsInterface TIC_CrrStr, TIC_IsItInterface
+
+			%ifdef TIC_IsItInterface
+				%undef TIC_IsItInterface
+			%else
+				%error Not recognized interface! TIC_CrrStr
+				%xdefine TraverseInterfaceChain_currentStruc void 
+				%xdefine void_size 0
+			%endif
+		%else
+			%undef TIC_IsLowType
+		%endif
+
+		%undef TIC_CrrStr
+
 		%macro TIC_HelperFunc 2
 			%undef %1%2
 		%endmacro	

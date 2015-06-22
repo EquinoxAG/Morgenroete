@@ -82,6 +82,77 @@
 	%undef DT_UnderlyingString
 %endmacro
 
+;1 = name of to define if true, 2 = first string, 3 = secStr
+%macro MultipleStrCmp 3-*
+	%xdefine MSC_TODEFINE %1
+	%xdefine MSC_FRSTSTR %2
+
+	%rep (%0-2)
+		%ifstr %3
+			MGRStrcmp MSC_FRSTSTR, %3, MSC_IS_EQUAL
+			%ifdef MSC_IS_EQUAL
+				%undef MSC_IS_EQUAL
+				%macro DepthDefine 1
+					%xdefine %1
+				%endmacro
+				DepthDefine MSC_TODEFINE
+				%unmacro DepthDefine 1
+			%endif
+		%endif
+		%rotate 1
+	%endrep
+	%undef MSC_TODEFINE
+	%undef MSC_FRSTSTR
+%endmacro
+
+;to define if true, 2 = string, 3 = part string
+%macro HasPartStr 3
+	%strlen HPS_PartStrlen %3
+	%strlen HPS_WholeStrlen %2
+
+	%assign HPS_counter 1
+
+	%if HPS_WholeStrlen > HPS_PartStrlen
+		%rep (HPS_WholeStrlen-HPS_PartStrlen)
+			%substr HPS_TestStr %2 HPS_counter,HPS_PartStrlen	
+			MGRStrcmp HPS_TestStr, %3,HPS_IS_EQUAL
+			%ifdef HPS_IS_EQUAL
+				%xdefine %1
+				%undef HPS_IS_EQUAL
+			%endif
+			%assign HPS_counter (HPS_counter+1)
+		%endrep
+	%endif
+%endmacro
+
+;1 = new defined string, 2 = string to replace, 3 = replacment, 4 = replacement str, 5 = number of replacments
+%macro SearchAndReplace 5
+	%strlen SAR_Strlen %2
+	%strlen SAR_StrlenRep %3
+	%assign %5 0
+	%xdefine %1 ''
+	
+	%assign SAR_Counter 1
+
+	%rep SAR_Strlen
+		%substr SAR_SubStr %2 SAR_Counter, SAR_StrlenRep
+		%if SAR_SubStr = %3
+			%strcat %1 %1, %4
+			%assign %5 (%4+1)
+			%assign SAR_Counter (SAR_Counter+(SAR_StrlenRep-1))
+		%else
+			%substr SAR_SubStr %2 SAR_Counter
+			%strcat %1 %1, SAR_SubStr
+		%endif
+
+		%assign SAR_Counter (SAR_Counter+1)
+	%endrep
+
+	%undef SAR_Strlen
+	%undef SAR_StrlenRep
+	%undef SAR_Counter
+	%undef SAR_SubStr
+%endmacro
 
 ;1 = string 1, 2 = string 2, 3 =defined if equal
 %macro MGRStrcmp 3
@@ -118,6 +189,25 @@
 %macro DivideStringsByChar_IDD 3
 	%xdefine %1%2 %3
 %endmacro
+
+;1=name of to define, 2=string, 3 = character to cut
+%macro CutAllCharactersOfType 3
+	%assign CAWS_counter 1
+	%strlen CAWS_strlen %2
+	%xdefine %1 ''
+	%rep CAWS_strlen
+		%substr CAWS_char %2 CAWS_counter
+		%ifn CAWS_char = %3
+			%strcat %1 %1, CAWS_char	
+		%endif
+		%assign CAWS_counter (CAWS_counter+1)
+	%endrep
+
+	%undef CAWS_counter
+	%undef CAWS_strlen
+	%undef CAWS_char
+%endmacro
+
 
 ;1=name of to define, 2=string
 %macro CutAllWhiteSpace 2
@@ -175,16 +265,16 @@
 %macro PartStringsByChar 4
 	%xdefine DSBC_counter 1
 	%strlen DSBC_strlen %1
+	%strlen DSBC_TokStrlen %2
 	%xdefine DSBC_is_sth 0
 	
 	%rep DSBC_strlen
 		%if DSBC_is_sth = 0
-			%substr DSBC_current_char %1 DSBC_counter
+			%substr DSBC_current_char %1 DSBC_counter, DSBC_TokStrlen
 			%if DSBC_current_char = %2
 				%substr %3 %1 1, (DSBC_counter-1)
-				%substr %4 %1 (DSBC_counter+1), DSBC_strlen
+				%substr %4 %1 (DSBC_counter+DSBC_TokStrlen), DSBC_strlen
 				%xdefine DSBC_is_sth 1
-				
 			%endif
 			%xdefine DSBC_counter (DSBC_counter+1)
 		%endif
@@ -193,7 +283,8 @@
 	%if DSBC_is_sth = 0
 		%xdefine %3 %1
 	%endif
-	
+
+	%undef DSBC_TokStrlen
 	%undef DSBC_is_sth
 
 	%undef DSBC_counter
