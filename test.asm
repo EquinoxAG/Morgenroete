@@ -26,7 +26,13 @@ interface_close
 
 DefineVariableCall InitialiseVGADriver, 2, 'hello.asm'
 
-destu:
+DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
+
+DeclareCall HelloWorld,2
+	mov rax, 10
+EndFunction
+
+
 global main
 main:
 
@@ -34,7 +40,7 @@ main:
 
 
 
-	secure_call InitialiseVGADriver, 100
+	secure_call InitialiseVGADriver, 100, rax
 
 	mov rdx, multiboot2.sig
 	ret

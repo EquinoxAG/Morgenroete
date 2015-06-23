@@ -10,9 +10,9 @@
 	force_call %1
 %endmacro
 
-
+%define STDCALL_GCC64 'STDCALL_VX64GCC'
 ;1 = function name, 2 = parameter count, 3 = from which file, 4 = calling convention
-%macro DefineCall 3-4 STDCALL_VX64GCC
+%macro DefineCall 3-4 'STDCALL_VX64GCC'
 	%xdefine %1_parameter_count %2
 	%xdefine %1_calling_convention %4
 	%xdefine %1_call StdExtCall
@@ -29,36 +29,38 @@
 %endmacro
 
 ;1 = function name, 2 = parameter count, 3 = calling convention
-%macro DeclareCall 3
+%macro DeclareCall 2
 	%ifdef LAST_DECLARED_FUNCTION
 		%error Before declaring a new call, close the last call with EndFunction first!
 	%else
 		%ifdef %1_parameter_count
 			%ifn %1_parameter_count = %2
 				%error The parameter count differs in declaration and definition, in function %1
-			%elifn %1_calling_convention = %3
-				%error The calling convention differs in the declaration and definition, in function %1
 			%else
 				global %1
 				%1:
-					%ifn %1_calling_convention = STDCALL_VX64GCC	;Convert calling convention to STDCALL_VX64GCC
+					MGRStrcmp %1_calling_convention, 'STDCALL_VX64GCC', DC_IsEqual
+					%ifndef DC_IsEqual
 					%endif
+					%undef DC_IsEqual
 					CreateStack %1_STACK
 					DefineArguments %1_parameter_count
 					%xdefine LAST_DECLARED_FUNCTION %1_STACK
+			
 			%endif
 		%endif
 	%endif
 %endmacro
 
 ;1 = name
-%macro EndFunction 1
+%macro EndFunction 0
 	DestroyStack LAST_DECLARED_FUNCTION
 	UndefineArguments
 	%undef LAST_DECLARED_FUNCTION
+	ret
 %endmacro
 
-%macro DefineVariableCall 3-4 STDCALL_VX64GCC
+%macro DefineVariableCall 3-4 'STDCALL_VX64GCC'
 	%xdefine %1_parameter_count %2
 	%xdefine %1_calling_convention %4
 	%xdefine %1_call StdExtCall
@@ -76,7 +78,7 @@
 
 
 ;1 = function name, 2 = parameter count,4 = macro to call the function takes 1 parameter, 5 = calling convention
-%macro DefinePolymorphicCall 4-5 STDCALL_VX64GCC
+%macro DefinePolymorphicCall 4-5 'STDCALL_VX64GCC'
 	%xdefine %1_parameter_count %2
 	%xdefine %1_calling_convention %5
 	%xdefine %1_call %4
@@ -87,11 +89,13 @@
 	%ifndef %1_parameter_count 
 		%warning The function was not defined by DefineCall therefore secure_call can not ensure a secure call
 	%else
+		%deftok CALL_CONV %1_calling_convention
 		%if %0 = 1
-			%1_calling_convention %1
+			CALL_CONV %1
 		%else
-			%1_calling_convention %1, %2
+			CALL_CONV %1, %2
 		%endif
+		%undef CALL_CONV
 	%endif	
 %endmacro	
 
@@ -160,7 +164,7 @@
 	%xdefine FUNC_NAME %1
 
 	%ifdef %1_parameter_count_var
-		%if %1_parameter_count > (%0-2)
+		%if %1_parameter_count > (%0-1)
 			%xdefine STD_PAR_ERROR
 		%endif
 	%else
@@ -216,7 +220,7 @@
 	%xdefine FUNC_NAME %1
 
 	%ifdef %1_parameter_count_var
-		%if %1_parameter_count > (%0-2)
+		%if %1_parameter_count > (%0-1)
 			%xdefine STD_PAR_ERROR
 		%endif
 	%else
