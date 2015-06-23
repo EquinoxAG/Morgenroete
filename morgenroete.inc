@@ -843,6 +843,9 @@
 					%endif
 					%undef FARLV_LOAD_EFFECTIVE_ADDRESS
 				%else
+					%ifndef OP1_SIZE
+						%xdefine OP1_SIZE 0
+					%endif
 					%if OP0_SIZE >= OP1_SIZE
 						mov OP0, OP1
 					%else
@@ -952,7 +955,7 @@
 	%undef FARLV_KlopStr
 	%undef %2_SIZE
 	DeductType %2_SIZE, UnderlyingStr
-
+	
 	%assign FARLV_counter 1
 	%assign FARLV_counter_end 1
 	%strlen FARLV_strlen UnderlyingStr
