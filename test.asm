@@ -30,11 +30,10 @@ DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
 
 
 
-DefineVariableCall main, 2,'test.asm'
 DeclareCall main, InternDef, GlobalDef, DarkSide
-
 	mov rax, Arg_InternDef
 	mov rdx, Arg_GlobalDef
+	mov rax, Arg_DarkSide
 
 	secure_call InitialiseVGADriver, 100, rax
 

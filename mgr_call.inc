@@ -48,6 +48,14 @@
 					CreateStack %1_STACK
 					%xdefine LAST_DECLARED_FUNCTION %1
 			%endif
+		%else
+			%xdefine %1_parameter_count 0
+			%xdefine %1_calling_convention 'STDCALL_VX64GCC'
+			%xdefine %1_call StdExtCall
+
+			%1:
+				CreateStack %1_STACK
+				%xdefine LAST_DECLARED_FUNCTION %1
 		%endif
 	%endif
 %endmacro
@@ -86,7 +94,8 @@
 			%ifndef DC_ISEqual
 				%error The parameter count differs in declaration and definition, in function %1
 			%else
-				BringToString ARG_LIST_DC, %2	
+				BringToString ARG_LIST_DC,DC_ARG_LIST_NUM, %2	
+				%undef DC_ARG_LIST_NUM
 
 				%undef DC_ISEqual
 				global %1
@@ -101,6 +110,18 @@
 					%xdefine LAST_USED_ARGLIST ARG_LIST_DC
 				%undef ARG_LIST_DC
 			%endif
+		%else
+			%xdefine %1_calling_convention 'STDCALL_VX64GCC'
+			%xdefine %1_call StdExtCall
+
+			BringToString ARG_LIST_DC, %1_parameter_count, %2
+			%1:
+				CreateStack %1_STACK
+				%xdefine LAST_DECLARED_FUNCTION %1
+				%xdefine LAST_USED_ARGLIST ARG_LIST_DC
+				DefineArguments ARG_LIST_DC
+			%undef ARG_LIST_DC
+
 		%endif
 
 		%unmacro IsEqualInNums 2-*
@@ -110,24 +131,25 @@
 	%endif
 %endmacro
 
-;1 = to define, 2 =
-%macro BringToString 2-*
+;1 = to define, 2 = number of parameters, 3 = parameters
+%macro BringToString 3-*
 	%undef BTS_EndStr
 
-	%rep (%0-1)
+	%define %2 (%0-2)
+	%rep (%0-2)
 		%ifndef BTS_EndStr
-			%ifstr %2
-				%xdefine BTS_EndStr %2
+			%ifstr %3
+				%xdefine BTS_EndStr %3
 			%else
-				%defstr BTS_String %2
+				%defstr BTS_String %3
 				%xdefine BTS_EndStr BTS_String
 			%endif
 		%else
 			%ifstr %2
 				%xdefine BTS_EndStr BTS_EndStr %+ ,
-				%xdefine BTS_EndStr BTS_EndStr %+ %2
+				%xdefine BTS_EndStr BTS_EndStr %+ %3
 			%else
-				%defstr BTS_String %2
+				%defstr BTS_String %3
 				%xdefine BTS_EndStr BTS_EndStr %+ ,
 				%xdefine BTS_EndStr BTS_EndStr %+ BTS_String
 			%endif
@@ -135,6 +157,7 @@
 		%rotate 1
 	%endrep
 
+	%rotate 1
 	%rotate 1
 	%xdefine %1 BTS_EndStr
 
