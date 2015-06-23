@@ -18,9 +18,11 @@
 	%xdefine %1_call StdExtCall
 	%undef %1_parameter_count_var
 
-	%pathsearch FullFileName %3
 
-	MGRStrcmp FullFileName, __FILE__, DC_IsEqual
+	PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%undef STR_WEAK
+	MGRStrcmp %3, STR_STRONG, DC_IsEqual
+	%undef STR_STRONG
 	%ifdef DC_IsEqual
 		%undef DC_IsEqual
 	%else

@@ -293,4 +293,34 @@
 %endmacro
 
 
+%macro PartStringsByCharLast 4
+	%xdefine DSBC_counter 1
+	%strlen DSBC_strlen %1
+	%strlen DSBC_TokStrlen %2
+	%xdefine DSBC_is_sth 1
+	
+	%rep DSBC_strlen
+		%substr DSBC_current_char %1 DSBC_counter, DSBC_TokStrlen
+		%if DSBC_current_char = %2
+			%xdefine DSBC_is_sth DSBC_counter
+		%endif
+		%xdefine DSBC_counter (DSBC_counter+1)
+	%endrep
+	
+	%if DSBC_is_sth = 1
+		%xdefine %4 %1
+	%else
+		%substr %3 %1 1,(DSBC_is_sth-1)
+		%substr %4 %1 (DSBC_is_sth+DSBC_TokStrlen), ((DSBC_strlen+1)-(DSBC_is_sth+DSBC_TokStrlen))
+	%endif
+
+	%undef DSBC_TokStrlen
+	%undef DSBC_is_sth
+
+	%undef DSBC_counter
+	%undef DSBC_strlen
+	%undef DSBC_current_char
+%endmacro
+
+
 %endif

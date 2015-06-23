@@ -28,9 +28,6 @@ DefineVariableCall InitialiseVGADriver, 2, 'hello.asm'
 
 DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
 
-DeclareCall HelloWorld,2
-	mov rax, 10
-EndFunction
 
 
 global main
