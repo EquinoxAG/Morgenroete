@@ -32,5 +32,22 @@
 	%endif
 %endmacro 
 
+; 1 = function Name
+%macro DisableNormalFunctionCall 1
+	%macro %1 0-*
+		%error This function is disabled please use the secure version of this call
+	%endmacro
+%endmacro
+
+%macro EnableNormalFunctionCall 1
+	%unmacro %1 0-*
+%endmacro
+
+%macro force_call 1
+	EnableNormalFunctionCall %1
+	call %1
+	DisableNormalFunctionCall %1
+%endmacro
 
 %endif
+

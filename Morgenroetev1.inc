@@ -4,6 +4,6 @@
 %include "mgr_interface.inc"
 %include "mgr_stack.inc"
 %include "mgr_inst.inc"
-
+%include "mgr_call.inc"
 
 %endif
