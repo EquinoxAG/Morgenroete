@@ -10,7 +10,6 @@
 	force_call %1
 %endmacro
 
-%xdefine LAST_DECLARED_FUNCTION 0
 
 ;1 = function name, 2 = parameter count, 3 = from which file, 4 = calling convention
 %macro DefineCall 3-4 STDCALL_VX64GCC
@@ -31,28 +30,32 @@
 
 ;1 = function name, 2 = parameter count, 3 = calling convention
 %macro DeclareCall 3
-	%ifdef %1_parameter_count
-		%ifn %1_parameter_count = %2
-			%error The parameter count differs in declaration and definition, in function %1
-		%elifn %1_calling_convention = %3
-			%error The calling convention differs in the declaration and definition, in function %1
-		%else
-			global %1
-			%1:
-				%ifn %1_calling_convention = STDCALL_VX64GCC	;Convert calling convention to STDCALL_VX64GCC
-				%endif
-				CreateStack %1_STACK
-				DefineArguments %1_parameter_count
-				%xdefine LAST_DECLARED_FUNCTION %1_STACK
+	%ifdef LAST_DECLARED_FUNCTION
+		%error Before declaring a new call, close the last call with EndFunction first!
+	%else
+		%ifdef %1_parameter_count
+			%ifn %1_parameter_count = %2
+				%error The parameter count differs in declaration and definition, in function %1
+			%elifn %1_calling_convention = %3
+				%error The calling convention differs in the declaration and definition, in function %1
+			%else
+				global %1
+				%1:
+					%ifn %1_calling_convention = STDCALL_VX64GCC	;Convert calling convention to STDCALL_VX64GCC
+					%endif
+					CreateStack %1_STACK
+					DefineArguments %1_parameter_count
+					%xdefine LAST_DECLARED_FUNCTION %1_STACK
+			%endif
 		%endif
 	%endif
-
 %endmacro
 
 ;1 = name
 %macro EndFunction 1
 	DestroyStack LAST_DECLARED_FUNCTION
 	UndefineArguments
+	%undef LAST_DECLARED_FUNCTION
 %endmacro
 
 %macro DefineVariableCall 3-4 STDCALL_VX64GCC
