@@ -30,13 +30,13 @@
 	%endif
 %endmacro
 
-;1 = function name, 2 = parameter count, 3 = calling convention
-%macro DeclareCall 2
+;1 = function name, 2 = parameter count
+%macro DeclareCall 1
 	%ifdef LAST_DECLARED_FUNCTION
 		%error Before declaring a new call, close the last call with EndFunction first!
 	%else
 		%ifdef %1_parameter_count
-			%ifn %1_parameter_count = %2
+			%ifn %1_parameter_count = (%0-1)
 				%error The parameter count differs in declaration and definition, in function %1
 			%else
 				global %1
@@ -46,19 +46,113 @@
 					%endif
 					%undef DC_IsEqual
 					CreateStack %1_STACK
-					DefineArguments %1_parameter_count
-					%xdefine LAST_DECLARED_FUNCTION %1_STACK
-			
+					%xdefine LAST_DECLARED_FUNCTION %1
 			%endif
 		%endif
 	%endif
 %endmacro
 
+;1 = function name, 2 = parameter count
+%macro DeclareCall 2+
+	%ifdef LAST_DECLARED_FUNCTION
+		%error Before declaring a new call, close the last call with EndFunction first!
+	%else
+		;1=to define if equal, 2 = num args needed
+		%macro IsEqualInNums 2-*
+			%if %2 = (%0-2)
+				%xdefine %1
+			%else
+				%undef %1
+			%endif
+		%endmacro
+
+		%macro IsGreaterThen 2-*
+			%if %2 < (%0-2)		;2 + Grater Than
+				%xdefine %1
+			%else
+				%undef %1
+			%endif
+		%endmacro
+
+
+		%ifdef %1_parameter_count
+			
+			%ifdef %1_parameter_count_var
+				IsGreaterThen DC_ISEqual, %1_parameter_count, %2
+			%else
+				IsEqualInNums DC_ISEqual, %1_parameter_count, %2
+			%endif
+
+			%ifndef DC_ISEqual
+				%error The parameter count differs in declaration and definition, in function %1
+			%else
+				BringToString ARG_LIST_DC, %2	
+
+				%undef DC_ISEqual
+				global %1
+				%1:
+					MGRStrcmp %1_calling_convention, 'STDCALL_VX64GCC', DC_IsEqual
+					%ifndef DC_IsEqual
+					%endif
+					%undef DC_IsEqual
+					CreateStack %1_STACK
+					DefineArguments ARG_LIST_DC
+					%xdefine LAST_DECLARED_FUNCTION %1
+					%xdefine LAST_USED_ARGLIST ARG_LIST_DC
+				%undef ARG_LIST_DC
+			%endif
+		%endif
+
+		%unmacro IsEqualInNums 2-*
+		%unmacro IsGreaterThen 2-*
+
+
+	%endif
+%endmacro
+
+;1 = to define, 2 =
+%macro BringToString 2-*
+	%undef BTS_EndStr
+
+	%rep (%0-1)
+		%ifndef BTS_EndStr
+			%ifstr %2
+				%xdefine BTS_EndStr %2
+			%else
+				%defstr BTS_String %2
+				%xdefine BTS_EndStr BTS_String
+			%endif
+		%else
+			%ifstr %2
+				%xdefine BTS_EndStr BTS_EndStr %+ ,
+				%xdefine BTS_EndStr BTS_EndStr %+ %2
+			%else
+				%defstr BTS_String %2
+				%xdefine BTS_EndStr BTS_EndStr %+ ,
+				%xdefine BTS_EndStr BTS_EndStr %+ BTS_String
+			%endif
+		%endif
+		%rotate 1
+	%endrep
+
+	%rotate 1
+	%xdefine %1 BTS_EndStr
+
+	%undef BTS_EndStr
+	%undef BTS_String
+%endmacro
+
+
 ;1 = name
 %macro EndFunction 0
-	DestroyStack LAST_DECLARED_FUNCTION
-	UndefineArguments
+	%xdefine STACK_NAME LAST_DECLARED_FUNCTION %+ _STACK
+	DestroyStack STACK_NAME
+	%undef STACK_NAME
+	%ifdef LAST_USED_ARGLIST
+		UndefineArguments LAST_USED_ARGLIST
+	%endif
 	%undef LAST_DECLARED_FUNCTION
+	%undef LAST_USED_ARGLIST
 	ret
 %endmacro
 
@@ -68,14 +162,16 @@
 	%xdefine %1_call StdExtCall
 	%xdefine %1_parameter_count_var
 
-	%pathsearch FullFileName %3
-
-	MGRStrcmp FullFileName, __FILE__, DC_IsEqual
+	PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%undef STR_WEAK
+	MGRStrcmp %3, STR_STRONG, DC_IsEqual
+	%undef STR_STRONG
 	%ifdef DC_IsEqual
 		%undef DC_IsEqual
 	%else
 		extern %1
 	%endif
+
 %endmacro
 
 
@@ -118,26 +214,38 @@
 
 %endmacro
 
-%macro DefineArguments 1
-		%if %1 > 0
-			%xdefine Argument_0 rdi
-			%if %1 > 1
-				%xdefine Argument_1 rsi
-				%if %1 > 2
-					%xdefine Argument_2 rdx
-					%if %1 > 3
-						%xdefine Argument_3 rcx
-						%if %1 > 4
-							%xdefine Argument_4 r8
-							%if %1 > 5
-								%xdefine Argument_5 r9
-								%if %1 > 6
-									%assign DA_counter 6
+%macro DefineArguments 1-*
+		%macro InternDefineArguments 3
+			%strcat IDA_CurrShit %1, %2
+			%deftok IDA_CurrShitTok IDA_CurrShit
+			%macro InternDefineSDA 2
+				%xdefine %1 %2
+			%endmacro
+			InternDefineSDA IDA_CurrShitTok, %3
+			%unmacro InternDefineSDA 2
+			%undef IDA_CurrShit
+			%undef IDA_CurrShitTok
+		%endmacro
+		%if %0 > 0
+			InternDefineArguments 'Arg_',%1,rdi
+			%if %0 > 1
+				InternDefineArguments 'Arg_',%2,rsi
+				%if %0 > 2
+					InternDefineArguments 'Arg_',%3,rdx
+					%if %0 > 3
+						InternDefineArguments 'Arg_',%4,rcx
+						%if %0 > 4
+							InternDefineArguments 'Arg_',%5,r8
+							%if %0 > 5
+								InternDefineArguments 'Arg_',%6,r9
+								%if %0 > 6
+									%assign DA_Counter 8
 									%rep (%0-6)
-										DivideStringsByChar_IDD Argument_, DA_counter, rbp + ( 8*(DA_counter-6) )
-										%assign DA_counter (DA_counter+1)
+										%rotate -1
+										InternDefineArguments 'Arg_', %1, rbp+(DA_Counter*8) 
+										%assign DA_Counter (DA_Counter+1)
 									%endrep
-									%undef DA_counter
+									%undef DA_Counter
 								%endif
 							%endif
 						%endif
@@ -145,20 +253,28 @@
 				%endif
 			%endif
 		%endif
+
+		%unmacro InternDefineArguments 3
 %endmacro
 
-%macro UndefineArguments 0
-	%undef Argument_0
-	%undef Argument_1
-	%undef Argument_2
-	%undef Argument_3
-	%undef Argument_4
-	%undef Argument_5
-	%undef Argument_6
-	%undef Argument_7
-	%undef Argument_8
-	%undef Argument_9
-	%undef Argument_10
+%macro UndefineArguments 1-*
+	%macro InternUndefineArguments 1
+		%xdefine FRST_ARG Ar
+		%strcat SEC_ARG 'g_', %1
+		%deftok SEC_ARG_TOK SEC_ARG
+		%macro InternRealUndefine 2
+			%undef %1%2
+		%endmacro
+		InternRealUndefine FRST_ARG,SEC_ARG_TOK
+		%unmacro InternRealUndefine 2
+		%undef FRST_ARG
+		%undef SEC_ARG
+		%undef SEC_ARG_TOK
+	%endmacro
+	%rep %0
+		InternUndefineArguments %1
+		%rotate 1
+	%endrep
 %endmacro
 
 %macro STDCALL_UEFI 1-*

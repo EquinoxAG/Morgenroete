@@ -30,17 +30,16 @@ DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
 
 
 
-global main
-main:
+DefineVariableCall main, 2,'test.asm'
+DeclareCall main, InternDef, GlobalDef, DarkSide
 
-
-
-
+	mov rax, Arg_InternDef
+	mov rdx, Arg_GlobalDef
 
 	secure_call InitialiseVGADriver, 100, rax
 
 	mov rdx, multiboot2.sig
-	ret
+EndFunction
 
 MyIntok:
 	dq 0, 0, 0
