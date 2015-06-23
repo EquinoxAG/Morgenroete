@@ -35,6 +35,7 @@ DeclareCall main, InternDef, GlobalDef, DarkSide
 	mov rdx, Arg_GlobalDef
 	mov rax, Arg_DarkSide
 
+	CheckUpdateStackPtr
 	secure_call InitialiseVGADriver, 100, rax
 
 	mov rdx, multiboot2.sig
