@@ -21,6 +21,8 @@ interface_open multiboot
 	interface mb2, multiboot2
 interface_close
 
+interface_destructor multiboot, MultibootDst
+
 %define MB_ADDR 0x1000
 
 
@@ -28,14 +30,18 @@ DefineVariableCall InitialiseVGADriver, 2, 'hello.asm'
 
 DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
 
-
+DefineCall MultibootDst, 1, 'hello.asm'
 
 DeclareCall main, InternDef, GlobalDef, DarkSide
 	mov rax, Arg_InternDef
 	mov rdx, Arg_GlobalDef
 	mov rax, Arg_DarkSide
 
-	CheckUpdateStackPtr
+	ReserveStackSpace MyVar, multiboot
+	UpdateStackPtr
+
+	mov_ts qword[ MyVar.mb2 ], rax
+
 	secure_call InitialiseVGADriver, 100, rax
 
 	mov rdx, multiboot2.sig

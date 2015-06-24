@@ -193,17 +193,37 @@
 
 			%ifdef FARLV_InitialStructure
 				%deftok FARLV_IS_CONNECTED FARLV_InitialStructure
+
+				%undef FARLV_IsStck
+				IsStackVar FARLV_IsStck, FARLV_InitialOffset
+
+				%ifdef FARLV_IsStck
+					%defstr FARLV_InitialOffset FARLV_IsStck
+					%strcat FARLV_InitialOffset '(rbp-', FARLV_InitialOffst
+					%strcat FARLV_InitialOffset FARLV_InitialOffset, ')'
+					%undef FARLV_IsStck
+				%endif
 				%xdefine FARLV_STR0 FARLV_InitialOffset
 				%undef FARLV_InitialStructure
 				%undef FARLV_InitialOffset
 			%else
 				%undef FARLV_InitialOffset
-				IsConnectedToHeap FARLV_STR0, FARLV_IS_CONNECTED
-				%ifndef FARLV_IS_CONNECTED
-					IsInterface FARLV_STR0, FARLV_IS_CONNECTED
-					%ifdef FARLV_IS_CONNECTED
-						%deftok FARLV_IS_CONNECTED FARLV_STR0
-						%xdefine FARLV_STR0 '0'
+				%undef FARLV_IsStck
+				IsStackVar FARLV_IsStck, FARLV_STR0
+				%ifdef FARLV_IsStck
+					GetStrucFromStackVar FARLV_IS_CONNECTED, FARLV_STR0
+					%defstr FARLV_STR0 FARLV_IsStck
+					%strcat FARLV_STR0 '(rbp-', FARLV_STR0
+					%strcat FARLV_STR0 FARLV_STR0,')'
+					%undef FARLV_IsStck
+				%else
+					IsConnectedToHeap FARLV_STR0, FARLV_IS_CONNECTED
+					%ifndef FARLV_IS_CONNECTED
+						IsInterface FARLV_STR0, FARLV_IS_CONNECTED
+						%ifdef FARLV_IS_CONNECTED
+							%deftok FARLV_IS_CONNECTED FARLV_STR0
+							%xdefine FARLV_STR0 '0'
+						%endif
 					%endif
 				%endif
 			%endif
