@@ -196,16 +196,20 @@
 	%xdefine %1_call StdExtCall
 	%xdefine %1_parameter_count_var
 
-	PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+
+	%ifdef MGR_SOURCE_FILE
+		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
+	%else
+		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%endif
 	%undef STR_WEAK
 	MGRStrcmp %3, STR_STRONG, DC_IsEqual
-	%undef STR_STRONG
 	%ifdef DC_IsEqual
 		%undef DC_IsEqual
 	%else
 		extern %1
 	%endif
-
+	%undef STR_STRONG
 %endmacro
 
 
@@ -214,6 +218,20 @@
 	%xdefine %1_parameter_count %2
 	%xdefine %1_calling_convention %5
 	%xdefine %1_call %4
+
+	%ifdef MGR_SOURCE_FILE
+		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
+	%else
+		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%endif
+	%undef STR_WEAK
+	MGRStrcmp %3, STR_STRONG, DC_IsEqual
+	%ifdef DC_IsEqual
+		%undef DC_IsEqual
+	%else
+		extern %1
+	%endif
+	%undef STR_STRONG
 %endmacro
 
 
