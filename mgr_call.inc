@@ -10,6 +10,13 @@
 	force_call %1
 %endmacro
 
+%macro INCLUDE 1
+	%ifndef MGR_SOURCE_FILE
+		%xdefine MGR_SOURCE_FILE __FILE__
+	%endif
+	%include %1
+%endmacro
+
 %define STDCALL_GCC64 'STDCALL_VX64GCC'
 ;1 = function name, 2 = parameter count, 3 = from which file, 4 = calling convention
 %macro DefineCall 3-4 'STDCALL_VX64GCC'
@@ -19,13 +26,16 @@
 	%undef %1_parameter_count_var
 
 
-	PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%ifdef MGR_SOURCE_FILE
+		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
+	%else
+		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+	%endif
 	%undef STR_WEAK
 	MGRStrcmp %3, STR_STRONG, DC_IsEqual
 	%ifdef DC_IsEqual
 		%undef DC_IsEqual
 	%else
-		%error STR_STRONG  :: %3 :: __FILE__
 		extern %1
 	%endif
 	%undef STR_STRONG

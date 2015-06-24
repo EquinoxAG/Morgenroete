@@ -26,13 +26,17 @@ interface_constructor multiboot, InitialiseVGADriver
 
 %define MB_ADDR 0x1000
 
+%define Mark3 10
+%define X_CALL Mark3
 
+%define __FILE__ 'colloq.asm'
 DefineCall InitialiseVGADriver, 2, 'hello.asm'
 
 DefineCall HelloWorld, 2,'test.asm', STDCALL_GCC64
 
 DefineCall MultibootDst, 1, 'hello.asm'
 
+%warning __PASS__
 DeclareCall main, InternDef, GlobalDef, DarkSide
 	mov rax, Arg_InternDef
 	mov rdx, Arg_GlobalDef
