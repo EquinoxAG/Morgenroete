@@ -47,6 +47,24 @@
 			%xdefine %$%2_VAR STACK_SPACE_%1_FLOATING
 			%xdefine %$%2_STRUC %3
 
+			%ifdef %3_constructor 
+				%strlen IRSS_CstLength %$CONSTRUCTOR_LIST
+				%ifn IRSS_CstLength = 0
+					%strcat %$CONSTRUCTOR_LIST %$CONSTRUCTOR_LIST,','
+				%endif
+				
+				%defstr IRSS_Appending %2
+				%strcat IRSS_Appending '%$', IRSS_Appending
+				%strcat %$CONSTRUCTOR_LIST %$CONSTRUCTOR_LIST,IRSS_Appending
+				%undef IRSS_Appending
+
+				%xdefine %$%2_CONSTRUCTOR %3_constructor
+				%if %0 = 4
+					%xdefine %$%2_CONSTRUCTOR_LIST %4
+				%else
+					%xdefine %$%2_CONSTRUCTOR_LIST ''
+				%endif
+			%endif
 			%ifdef %3_destructor
 				%strlen IRSS_DstLength %$DESTRUCTOR_LIST
 				%ifn IRSS_DstLength = 0
@@ -62,6 +80,48 @@
 	%else
 		%error Unknown error occured
 	%endif
+%endmacro
+
+;1 = stack name
+%macro CallConstructors 0
+	%strlen CC_CstStrlen %$CONSTRUCTOR_LIST
+	%ifn CC_CstStrlen = 0
+		push rbx
+		%deftok CC_ArgList %$CONSTRUCTOR_LIST
+		CallCst CC_ArgList
+		%undef CC_ArgList
+		pop rbx
+	%endif
+	%undef CC_CstStrlen
+%endmacro
+
+%macro CallCst 1-*
+	%defstr CC_Var %1
+	%strcat CC_DestFunc CC_Var, '_CONSTRUCTOR'
+	%strcat CC_DestFuncArgs CC_Var, '_CONSTRUCTOR_LIST'
+	%strcat CC_Var CC_Var, '_VAR'
+	%deftok CC_Var CC_Var
+	%deftok CC_DestFunc CC_DestFunc
+
+	%deftok CC_DestFuncArgs CC_DestFuncArgs
+
+	%strlen CC_ArgsLen CC_DestFuncArgs
+
+
+	mov rbx, rbp
+	sub rbx, CC_Var
+
+	%if CC_ArgsLen = 0
+		secure_call CC_DestFunc, rbx
+	%else
+		%deftok CC_DestFuncArgs CC_DestFuncArgs
+		secure_call CC_DestFunc, rbx, CC_DestFuncArgs
+	%endif
+
+	%undef CC_ArgsLen
+	%undef CC_Var
+	%undef CC_DestFunc
+	%undef CC_DestFuncArgs
 %endmacro
 
 ;1 = stack name
@@ -143,6 +203,7 @@
 		%endmacro
 		USP_DeepDefine %$STACK_NAME, STACK_SPACE_TRAILING
 		%unmacro USP_DeepDefine 2
+		CallConstructors
 	%endif
 	%undef STACK_SPACE
 	%undef STACK_SPACE_TRAILING

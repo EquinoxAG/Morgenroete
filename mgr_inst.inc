@@ -6,6 +6,7 @@
 %include "mgr_debug.inc"
 
 %macro mov_tus 2
+	CheckUpdateStackPtr
 	SearchReplaceLocalVar %1, OP0, OP0_STRUC
 	SearchReplaceLocalVar %2, OP1, OP1_STRUC
 
@@ -19,6 +20,7 @@
 %endmacro
 
 %macro mov_ts 2
+	CheckUpdateStackPtr
 	SearchReplaceLocalVar %1, OP0, OP0_STRUC
 	SearchReplaceLocalVar %2, OP1, OP1_STRUC
 
