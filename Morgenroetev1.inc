@@ -5,5 +5,6 @@
 %include "mgr_stack.inc"
 %include "mgr_inst.inc"
 %include "mgr_call.inc"
+%include "mgr_misc.inc"
 
 %endif

@@ -10,46 +10,20 @@
 	force_call %1
 %endmacro
 
-%macro INCLUDE 1
-	%ifndef MGR_SOURCE_FILE
-		%xdefine MGR_SOURCE_FILE __FILE__
-	%endif
-	%include %1
-%endmacro
-
 %define STDCALL_GCC64 'STDCALL_VX64GCC'
 ;1 = function name, 2 = parameter count, 3 = from which file, 4 = calling convention
-%macro DefineCall 3-4 'STDCALL_VX64GCC'
-	%xdefine %1_parameter_count %2
-	%xdefine %1_calling_convention %4
-	%xdefine %1_call StdExtCall
-	%undef %1_parameter_count_var
-	%xdefine %1_additional_parameter 0
-
-
-	%ifdef MGR_SOURCE_FILE
-		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
-	%else
-		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
-	%endif
-	%undef STR_WEAK
-	MGRStrcmp %3, STR_STRONG, DC_IsEqual
-	%ifdef DC_IsEqual
-		%undef DC_IsEqual
-	%else
-		extern %1
-	%endif
-	%undef STR_STRONG
+%macro DefineFunction 3-4 'STDCALL_VX64GCC'
+	DefineFunctionInterface %1, %2, %3, StdExtCall, 0, %4
 %endmacro
 
 ;1 = function name, 2 = parameter count
-%macro DeclareCall 1
+%macro DeclareFunction 1
 	%ifdef LAST_DECLARED_FUNCTION
-		%error Before declaring a new call, close the last call with EndFunction first!
+		%fatal Before declaring a new call, close the last call with EndFunction first!
 	%else
 		%ifdef %1_parameter_count
 			%ifn %1_parameter_count = (%0-1)
-				%error The parameter count differs in declaration and definition, in function %1
+				%fatal The parameter count differs in declaration and definition, in function %1
 			%else
 				global %1
 				%1:
@@ -73,9 +47,9 @@
 %endmacro
 
 ;1 = function name, 2 = parameter count
-%macro DeclareCall 2+
+%macro DeclareFunction 2+
 	%ifdef LAST_DECLARED_FUNCTION
-		%error Before declaring a new call, close the last call with EndFunction first!
+		%fatal Before declaring a new call, close the last call with EndFunction first!
 	%else
 		;1=to define if equal, 2 = num args needed
 		%macro IsEqualInNums 2-*
@@ -104,7 +78,7 @@
 			%endif
 
 			%ifndef DC_ISEqual
-				%error The parameter count differs in declaration and definition, in function %1
+				%fatal The parameter count differs in declaration and definition, in function %1
 			%else
 				BringToString ARG_LIST_DC,DC_ARG_LIST_NUM, %2	
 				%undef DC_ARG_LIST_NUM
@@ -191,31 +165,18 @@
 	ret
 %endmacro
 
-%macro DefineVariableCall 3-4 'STDCALL_VX64GCC'
-	%xdefine %1_parameter_count %2
-	%xdefine %1_calling_convention %4
-	%xdefine %1_call StdExtCall
+%macro DefineVariableFunction 3-4 'STDCALL_VX64GCC'
 	%xdefine %1_parameter_count_var
-	%xdefine %1_additional_parameter 0
-
-	%ifdef MGR_SOURCE_FILE
-		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
-	%else
-		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
-	%endif
-	%undef STR_WEAK
-	MGRStrcmp %3, STR_STRONG, DC_IsEqual
-	%ifdef DC_IsEqual
-		%undef DC_IsEqual
-	%else
-		extern %1
-	%endif
-	%undef STR_STRONG
+	DefineFunctionInterface %1, %2, %3, StdExtCall, 0, %4
 %endmacro
 
 
 ;1 = function name, 2 = parameter count,4 = macro to call the function takes 1 parameter, 5 = calling convention
-%macro DefinePolymorphicCall 5-6 'STDCALL_VX64GCC'
+%macro DefinePolymorphicFunction 5-6 'STDCALL_VX64GCC'
+	DefineFunctionInterface %1, %2, %3, %4, %5, %6
+%endmacro
+
+%macro DefineFunctionInterface 6
 	%xdefine %1_parameter_count %2
 	%xdefine %1_calling_convention %6
 	%xdefine %1_call %4
@@ -235,7 +196,6 @@
 	%endif
 	%undef STR_STRONG
 %endmacro
-
 
 %macro secure_call 1-2+
 	%ifndef %1_parameter_count 
@@ -376,9 +336,9 @@
 		%undef STD_PAR_ERROR
 		%assign SD_Par (%0-1)
 		%ifdef %1_parameter_count_var
-			%error The function %1 takes a minimum parameter count of %1_parameter_count instead of SD_Par parameters
+			%fatal The function %1 takes a minimum parameter count of %1_parameter_count instead of SD_Par parameters
 		%else
-			%error The function %1 takes %1_parameter_count parameters instead of SD_Par parameters
+			%fatal The function %1 takes %1_parameter_count parameters instead of SD_Par parameters
 		%endif
 		%undef SD_Par
 	%endif
@@ -452,9 +412,9 @@
 		%undef STD_PAR_ERROR
 		%assign SD_Par (%0-1)
 		%ifdef %1_parameter_count_var
-			%error The function %1 takes a minimum parameter count of %1_parameter_count instead of SD_Par parameters
+			%fatal The function %1 takes a minimum parameter count of %1_parameter_count instead of SD_Par parameters
 		%else
-			%error The function %1 takes %1_parameter_count parameters instead of SD_Par parameters
+			%fatal The function %1 takes %1_parameter_count parameters instead of SD_Par parameters
 		%endif
 		%undef SD_Par
 	%endif
