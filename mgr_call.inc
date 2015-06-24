@@ -24,6 +24,7 @@
 	%xdefine %1_calling_convention %4
 	%xdefine %1_call StdExtCall
 	%undef %1_parameter_count_var
+	%xdefine %1_additional_parameter 0
 
 
 	%ifdef MGR_SOURCE_FILE
@@ -195,7 +196,7 @@
 	%xdefine %1_calling_convention %4
 	%xdefine %1_call StdExtCall
 	%xdefine %1_parameter_count_var
-
+	%xdefine %1_additional_parameter 0
 
 	%ifdef MGR_SOURCE_FILE
 		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
@@ -214,10 +215,11 @@
 
 
 ;1 = function name, 2 = parameter count,4 = macro to call the function takes 1 parameter, 5 = calling convention
-%macro DefinePolymorphicCall 4-5 'STDCALL_VX64GCC'
+%macro DefinePolymorphicCall 5-6 'STDCALL_VX64GCC'
 	%xdefine %1_parameter_count %2
-	%xdefine %1_calling_convention %5
+	%xdefine %1_calling_convention %6
 	%xdefine %1_call %4
+	%xdefine %1_additional_parameter %5
 
 	%ifdef MGR_SOURCE_FILE
 		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
