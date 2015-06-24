@@ -22,12 +22,13 @@
 	PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
 	%undef STR_WEAK
 	MGRStrcmp %3, STR_STRONG, DC_IsEqual
-	%undef STR_STRONG
 	%ifdef DC_IsEqual
 		%undef DC_IsEqual
 	%else
+		%error STR_STRONG  :: %3 :: __FILE__
 		extern %1
 	%endif
+	%undef STR_STRONG
 %endmacro
 
 ;1 = function name, 2 = parameter count
