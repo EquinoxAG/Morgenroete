@@ -66,35 +66,26 @@
 	%endif
 %endmacro
 
-;Attribute name, attribute struc
-%macro interface 2
-	%ifdef MGR_CURRENT_INTERFACE
-		MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2
-	%else
-		%error No interface is opened at this moment
-	%endif
-%endmacro
-
-;Attribute name, offset in structure, attribute structure
-%macro interface 3
-	%ifdef MGR_CURRENT_INTERFACE 
-		MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2, %3
-	%else
-		%error No interface is opened at this moment
-	%endif
-%endmacro
 
 %macro interface_open 1
 	%ifdef MGR_CURRENT_INTERFACE
 		%error There can only be one interface opened at a time please use interface_close before
 	%else
 		%xdefine MGR_CURRENT_INTERFACE %1
+		%macro add 2
+			MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2
+		%endmacro
+		%macro add 3
+			MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2, %3
+		%endmacro
 	%endif
 %endmacro
 
 %macro interface_close 0
 	%ifdef MGR_CURRENT_INTERFACE
 		%undef MGR_CURRENT_INTERFACE
+		%unmacro add 2
+		%unmacro add 3
 	%else
 		%error Currently there is no interface open
 	%endif

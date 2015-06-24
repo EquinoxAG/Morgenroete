@@ -1,24 +1,24 @@
 %include "Morgenroetev1.inc"
 
 interface_open multiboot
-	interface sig, qword
-	interface rev, dword 
+	add sig, qword
+	add rev, dword 
 interface_close
 
 
 interface_open point
-	interface x_coord, qword
-	interface y_coord, qword
-	interface z_coord, dword
+	add x_coord, qword
+	add y_coord, qword
+	add z_coord, dword
 interface_close
 
 interface_open multiboot2
 	DeriveInterface multiboot
-	interface point3D, point
+	add point3D, point
 interface_close
 
 interface_open multiboot
-	interface mb2, multiboot2
+	add mb2, multiboot2
 interface_close
 
 interface_destructor multiboot, MultibootDst
