@@ -41,7 +41,7 @@ DeclareFunction main, InternDef, GlobalDef, DarkSide
 	ReserveStackSpace MyVar, multiboot, 100
 	UpdateStackPtr
 
-	mov_ts qword[ MyVar.mb2 ], rax
+	mov_ts qword[ MyVar.mb2.loopl ], rax
 
 	secure_call InitialiseVGADriver, 100, rax, rbx
 

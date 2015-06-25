@@ -255,7 +255,17 @@
 			%undef TIC_RealCurrentMember
 		%endif
 		%deftok TIC_CurrentMemberTok TIC_CurrentMember
+
+
+		%macro TIC_IsDefined 2
+			%ifndef %1.%2
+				%fatal The interface %1 has not got a member named %2
+			%endif
+		%endmacro
+		TIC_IsDefined TraverseInterfaceChain_currentStruc, TIC_CurrentMemberTok
 		%xdefine TIC_CurrentOffset TraverseInterfaceChain_currentStruc %+ . %+ TIC_CurrentMemberTok
+
+
 		%defstr TIC_CurrentOffsetStr TIC_CurrentOffset
 	
 		%strlen TIC_totaloffsetlen TraverseInterfaceChain_totaloffset	

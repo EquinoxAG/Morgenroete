@@ -289,6 +289,7 @@
 		InternUndefineArguments %1
 		%rotate 1
 	%endrep
+	%unmacro InternUndefineArguments 1
 %endmacro
 
 %macro STDCALL_UEFI 1-*
