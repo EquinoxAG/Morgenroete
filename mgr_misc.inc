@@ -1,7 +1,7 @@
 %ifndef _MORGENROETE_MISC_INC_
 %define _MORGENROETE_MISC_INC_
 
-%include "mbr_string.inc"
+%include "mgr_string.inc"
 
 %macro INCLUDE 1
 	%ifndef MGR_SOURCE_FILE
