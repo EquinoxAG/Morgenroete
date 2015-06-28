@@ -18,7 +18,7 @@
 		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
 	%endif
 	%undef STR_WEAK
-	MGRStrcmp %3, STR_STRONG, dc_isequal
+	MGRStrcmp %1, STR_STRONG, dc_isequal
 	%ifdef dc_isequal
 		%undef dc_isequal
 	%else
