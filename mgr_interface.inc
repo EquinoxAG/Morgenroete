@@ -263,6 +263,7 @@
 			%endif
 		%endmacro
 		TIC_IsDefined TraverseInterfaceChain_currentStruc, TIC_CurrentMemberTok
+		%unmacro TIC_IsDefined 2
 		%xdefine TIC_CurrentOffset TraverseInterfaceChain_currentStruc %+ . %+ TIC_CurrentMemberTok
 
 
