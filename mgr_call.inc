@@ -188,9 +188,9 @@
 		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
 	%endif
 	%undef STR_WEAK
-	MGRStrcmp %3, STR_STRONG, DC_IsEqual
-	%ifdef DC_IsEqual
-		%undef DC_IsEqual
+	MGRStrcmp %3, STR_STRONG, dc_isequal
+	%ifdef dc_isequal
+		%undef dc_isequal
 	%else
 		extern %1
 	%endif
