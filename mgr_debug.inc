@@ -44,9 +44,13 @@
 %endmacro
 
 %macro force_call 1
-	EnableNormalFunctionCall %1
-	call %1
-	DisableNormalFunctionCall %1
+	%ifmacro %1 0-*
+		EnableNormalFunctionCall %1
+		call %1
+		DisableNormalFunctionCall %1
+	%else
+		call %1
+	%endif
 %endmacro
 
 %endif
