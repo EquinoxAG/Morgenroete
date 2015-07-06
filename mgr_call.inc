@@ -16,6 +16,12 @@
 	DefineFunctionInterface %1, %2, %3, StdExtCall, 0, %4
 %endmacro
 
+;1 = function name, 2 = parameter count, 3 = from which interface, 4 = from which file, 5 = calling convention
+%macro DefineClassFunction 4-5
+	%xdefine %1_calling_class %3
+	DefineFunctionInterface %1, %2, %4, StdExtCall, 0, %5
+%endmacro
+
 ;1 = function name, 2 = parameter count
 %macro DeclareFunction 1
 	%ifdef LAST_DECLARED_FUNCTION
@@ -177,24 +183,32 @@
 %endmacro
 
 %macro DefineFunctionInterface 6
-	%xdefine %1_parameter_count %2
-	%xdefine %1_calling_convention %6
-	%xdefine %1_call %4
-	%xdefine %1_additional_parameter %5
+	%defstr DFI_TryStr %1
+	HasPartStr DFI_HasPoint,DFI_TryStr, '.'
+	%ifdef DFI_HasPoint
+		%undef DFI_HasPoint
+		%fatal A function must not have a point in its name, error in function %1
+	%else
+		%xdefine %1_parameter_count %2
+		%xdefine %1_calling_convention %6
+		%xdefine %1_call %4
+		%xdefine %1_additional_parameter %5
 
-	%ifdef MGR_SOURCE_FILE
-		PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
-	%else
-		PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+		%ifdef MGR_SOURCE_FILE
+			PartStringsByCharLast MGR_SOURCE_FILE, '/', STR_WEAK, STR_STRONG
+		%else
+			PartStringsByCharLast __FILE__, '/', STR_WEAK, STR_STRONG
+		%endif
+		%undef STR_WEAK
+		MGRStrcmp %3, STR_STRONG, dc_isequal
+		%ifdef dc_isequal
+			%undef dc_isequal
+		%else
+			extern %1
+		%endif
+		%undef STR_STRONG
 	%endif
-	%undef STR_WEAK
-	MGRStrcmp %3, STR_STRONG, dc_isequal
-	%ifdef dc_isequal
-		%undef dc_isequal
-	%else
-		extern %1
-	%endif
-	%undef STR_STRONG
+	%undef DFI_TryStr
 %endmacro
 
 %macro secure_call 1-2+
@@ -209,7 +223,56 @@
 		%endif
 		%undef CALL_CONV
 	%endif	
-%endmacro	
+%endmacro
+
+
+%macro special_call 1+
+	%defstr SC_PickingStr %1
+	HasPartStr SC_HasArgList,SC_PickingStr, '('
+	%ifdef SC_HasArgList
+		%undef SC_HasArgList
+
+		%xdefine SC_TypDeductStr ''
+		%xdefine SC_SurgeryStr SC_PickingStr
+		%rep 200
+			%undef SC_STRPart0
+			%undef SC_STRPart1
+			PartStringsByChar SC_SurgeryStr, '(', SC_STRPart0, SC_STRPart1
+			%strlen SC_TmpStrlen SC_STRPart0
+			%if SC_TmpStrlen = 0
+				%strcat SC_TypDeductStr SC_TypDeductStr, '('
+				%xdefine SC_SurgeryStr SC_STRPart1
+			%else
+				%exitrep
+			%endif
+		%endrep
+		%strcat SC_TypDeductStr SC_TypDeductStr, SC_STRPart0
+		%undef SC_TmpStrlen
+		%undef SC_STRPart0
+		%undef SC_STRPart1
+		%undef SC_SurgeryStr
+
+		HasPartStr SC_IsClassFunc, SC_TypDeductStr, '.'
+
+		%ifdef SC_IsClassFunc
+			%undef SC_IsClassFunc
+			PartStringsByCharLast SC_TypDeductStr, '.', SC_InterfaceName, SC_FunctionName
+			%strcat SC_InterfaceName SC_InterfaceName, ','
+		%else
+			%xdefine SC_FunctionName SC_TypDeductStr
+		%endif
+
+		HasPartStr SC_HasManyArgs, SC_PickingStr, ','
+		%ifdef SC_HasManyArgs ;Two agrumnets or more, because function(arg1,arg2,...)
+			%undef SC_HasManyArgs
+
+
+		%else		;zero arguments or one, because function() or function( arg1 )
+		%endif
+	%else
+		%fatal The function misses any argument list %1!
+	%endif
+%endmacro
 
 %macro move_if_unequal 2
 	%defstr MIU_STR0 %1
@@ -278,7 +341,7 @@
 		%deftok SEC_ARG_TOK SEC_ARG
 		%macro InternRealUndefine 2
 			%undef %1%2
-		%endmacro
+	%endmacro
 		InternRealUndefine FRST_ARG,SEC_ARG_TOK
 		%unmacro InternRealUndefine 2
 		%undef FRST_ARG

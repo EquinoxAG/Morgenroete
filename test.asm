@@ -29,23 +29,12 @@ interface_constructor multiboot, InitialiseVGADriver
 
 DefineFunction InitialiseVGADriver, 2, 'hello.asm'
 
-DefineFunction HelloWorld, 2,'test.asm', STDCALL_GCC64
+DefineClassFunction HelloWorld, 2, multiboot,'test.asm', STDCALL_GCC64
 
 DefineFunction MultibootDst, 1, 'hello.asm'
 
 DeclareFunction main, InternDef, GlobalDef, DarkSide
-	mov rax, Arg_InternDef
-	mov rdx, Arg_GlobalDef
-	mov rax, Arg_DarkSide
-
-	ReserveStackSpace MyVar, multiboot, 100
-	UpdateStackPtr
-
-	mov_ts qword[ MyVar.mb2.loopl ], rax
-
-	secure_call InitialiseVGADriver, 100, rax, rbx
-
-	mov rdx, multiboot2.sig
+	special_call ((yolo->multiboot).col->darlsode).HelloWord()
 EndFunction
 
 MyIntok:
