@@ -50,6 +50,10 @@
 				%xdefine %1_%2_STRUCTURE %4
 				%assign %1_parameter 1
 				RegisterInterfaceAttributeByNum %1, %1_parameter, %2
+				%ifndef %1_base_classes
+					%xdefine %1_base_classes %1
+					%xdefine %1_num_base_classes 1
+				%endif
 			%endif
 		
 			%unmacro RegisterInterfaceAttributeByNum 3
@@ -71,13 +75,18 @@
 	%ifdef MGR_CURRENT_INTERFACE
 		%error There can only be one interface opened at a time please use interface_close before
 	%else
-		%xdefine MGR_CURRENT_INTERFACE %1
-		%macro add 2
-			MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2
-		%endmacro
-		%macro add 3
-			MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2, %3
-		%endmacro
+
+		%ifdef %1_parameter
+			%fatal Syntax error cannot open a already defined interface
+		%else
+			%xdefine MGR_CURRENT_INTERFACE %1
+			%macro add 2
+				MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2
+			%endmacro
+			%macro add 3
+				MGRInternInterface MGR_CURRENT_INTERFACE, %1, %2, %3
+			%endmacro
+		%endif
 	%endif
 %endmacro
 
@@ -111,6 +120,34 @@
 	%endif
 %endmacro
 
+;1 = interface name, 2 = to define the number
+%macro GetInterfaceNumBaseClasses 2
+	%xdefine %2 %1_num_base_classes
+%endmacro
+
+;1 = interface name, 2 = base class number, 3 = to define the base class
+%macro GetBaseClassByNum 3
+	%macro DeepDefineBaseClass 2-*
+		%xdefine To_Def_Name %1
+		%xdefine Base_Class_Num %2
+
+		%rep (Base_Class_Num+1)
+			%rotate 1
+		%endrep
+
+		%macro VeryDeppDefine 2
+			%xdefine %1 %2
+		%endmacro
+		VeryDeppDefine To_Def_Name, %1
+		%unmacro VeryDeppDefine 2
+	%endmacro
+
+	DeepDefineBaseClass %3, %2, %1_base_classes
+
+	%unmacro DeepDefineBaseClass 2-*
+%endmacro
+
+
 ;1 to define interface name, 2 to get from interface name, 3 = number
 %macro CloneAttributeByNum 3
 	%?? %1, %2, %3, %2_%3
@@ -137,6 +174,8 @@
 		%error Unknown interface %2, cannot build derivation tree
 	%else
 		%xdefine %1_size %2_size
+		%xdefine %1_base_classes %1 %+ , %+ %2_base_classes
+		%xdefine %1_num_base_classes (%2_num_base_classes+1)
 		%assign %1_parameter %2_parameter
 		%assign DERIVE_INTERFACE_counter 1
 		%rep %2_parameter

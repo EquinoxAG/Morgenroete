@@ -1,0 +1,160 @@
+%line 3+1 Morgenroetev1.inc
+%line 3+1 mgr_interface.inc
+%line 3+1 mgr_string.inc
+%line 84+1 mgr_string.inc
+%line 107+1 mgr_string.inc
+%line 132+1 mgr_string.inc
+%line 161+1 mgr_string.inc
+%line 192+1 mgr_string.inc
+%line 197+1 mgr_string.inc
+%line 215+1 mgr_string.inc
+%line 234+1 mgr_string.inc
+%line 268+1 mgr_string.inc
+%line 299+1 mgr_string.inc
+%line 329+1 mgr_string.inc
+%line 5+1 mgr_interface.inc
+%line 10+1 mgr_interface.inc
+%line 14+1 mgr_interface.inc
+%line 18+1 mgr_interface.inc
+%line 22+1 mgr_interface.inc
+%line 59+1 mgr_interface.inc
+%line 68+1 mgr_interface.inc
+%line 83+1 mgr_interface.inc
+%line 93+1 mgr_interface.inc
+%line 113+1 mgr_interface.inc
+%line 118+1 mgr_interface.inc
+%line 123+1 mgr_interface.inc
+%line 132+1 mgr_interface.inc
+%line 148+1 mgr_interface.inc
+%line 153+1 mgr_interface.inc
+%line 158+1 mgr_interface.inc
+%line 169+1 mgr_interface.inc
+%line 181+1 mgr_interface.inc
+%line 192+1 mgr_interface.inc
+%line 201+1 mgr_interface.inc
+%line 220+1 mgr_interface.inc
+%line 239+1 mgr_interface.inc
+%line 332+1 mgr_interface.inc
+%line 3+1 mgr_stack.inc
+%line 24+1 mgr_stack.inc
+%line 29+1 mgr_stack.inc
+%line 35+1 mgr_stack.inc
+%line 84+1 mgr_stack.inc
+%line 97+1 mgr_stack.inc
+%line 126+1 mgr_stack.inc
+%line 139+1 mgr_stack.inc
+%line 156+1 mgr_stack.inc
+%line 164+1 mgr_stack.inc
+%line 184+1 mgr_stack.inc
+%line 195+1 mgr_stack.inc
+%line 211+1 mgr_stack.inc
+%line 226+1 mgr_stack.inc
+%line 3+1 mgr_inst.inc
+%line 3+1 mgr_debug.inc
+%line 9+1 mgr_debug.inc
+%line 13+1 mgr_debug.inc
+%line 34+1 mgr_debug.inc
+%line 41+1 mgr_debug.inc
+%line 45+1 mgr_debug.inc
+%line 55+1 mgr_debug.inc
+%line 7+1 mgr_inst.inc
+%line 21+1 mgr_inst.inc
+%line 150+1 mgr_inst.inc
+%line 286+1 mgr_inst.inc
+%line 3+1 mgr_call.inc
+%line 57+1 mgr_debug.inc
+%line 8+1 mgr_call.inc
+%line 12+1 mgr_call.inc
+%line 18+1 mgr_call.inc
+%line 24+1 mgr_call.inc
+%line 27+1 mgr_call.inc
+%line 43+1 mgr_call.inc
+%line 125+1 mgr_call.inc
+%line 232+1 mgr_call.inc
+%line 263+1 mgr_call.inc
+%line 334+1 mgr_call.inc
+%line 368+1 mgr_call.inc
+%line 382+1 mgr_call.inc
+%line 387+1 mgr_call.inc
+%line 393+1 mgr_call.inc
+%line 422+1 mgr_call.inc
+%line 436+1 mgr_call.inc
+%line 485+1 mgr_call.inc
+%line 502+1 mgr_call.inc
+%line 545+1 mgr_call.inc
+%line 566+1 mgr_call.inc
+%line 622+1 mgr_call.inc
+%line 698+1 mgr_call.inc
+%line 3+1 mgr_misc.inc
+%line 12+1 mgr_misc.inc
+%line 29+1 mgr_misc.inc
+%line 9+1 Morgenroetev1.inc
+%line 2+1 test.asm
+%line 4+0 test.asm
+%line 5+1 test.asm
+%line 5+0 test.asm
+%line 7+1 test.asm
+%line 10+0 test.asm
+%line 11+1 test.asm
+%line 11+0 test.asm
+%line 12+1 test.asm
+%line 12+0 test.asm
+%line 14+1 test.asm
+%line 17+1 test.asm
+%line 17+0 test.asm
+%line 19+1 test.asm
+%line 21+0 test.asm
+%line 23+1 test.asm
+%line 30+0 test.asm
+[extern InitialiseVGADriver]
+%line 31+1 test.asm
+%line 32+0 test.asm
+%line 33+1 test.asm
+%line 34+0 test.asm
+[extern MultibootDst]
+%line 35+1 test.asm
+%line 35+0 test.asm
+%line 36+1 test.asm
+%line 36+0 test.asm
+%line 37+1 test.asm
+%line 37+0 test.asm
+%line 38+1 test.asm
+%line 39+0 test.asm
+[global multiboot@ShitHouse_parcount_3]
+ multiboot@ShitHouse_parcount_3:
+ push rbp
+ mov rbp, rsp
+%line 40+1 test.asm
+ mov rax, rdi
+ mov rsp, rbp
+%line 41+0 test.asm
+ pop rbp
+ ret
+%line 42+1 test.asm
+%line 43+0 test.asm
+[global ShitHouse]
+ ShitHouse:
+ push rbp
+ mov rbp, rsp
+%line 44+1 test.asm
+ mov rsp, rbp
+%line 44+0 test.asm
+ pop rbp
+ ret
+%line 45+1 test.asm
+%line 46+0 test.asm
+ main:
+ push rbp
+ mov rbp, rsp
+%line 47+1 test.asm
+%line 47+0 test.asm
+%line 48+1 test.asm
+ mov rsp, rbp
+%line 48+0 test.asm
+ pop rbp
+ ret
+%line 49+1 test.asm
+MyIntok:
+ dq 0, 0, 0
+%line 54+0 test.asm
+[extern multiboot@ShitHouse_parcount_5]

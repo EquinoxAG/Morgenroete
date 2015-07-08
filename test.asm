@@ -17,25 +17,35 @@ interface_open multiboot2
 	add point3D, point
 interface_close
 
-interface_open multiboot
-	add mb2, multiboot2
-interface_close
-
-interface_destructor multiboot, MultibootDst
-interface_constructor multiboot, InitialiseVGADriver 
 
 %define MB_ADDR 0x1000
 
 
-DefineFunction InitialiseVGADriver, 2, 'hello.asm'
+DefineFunction ShitHouse, 2+
+DefineFunction multiboot::ShitHouse, 2+
+DefineFunction HelloWorld, 0+
 
-DefineClassFunction HelloWorld, 2, multiboot,'test.asm', STDCALL_GCC64
+DeclareFunction multiboot::ShitHouse(Yolo, Colo)
+	mov rdi, Arg_this
+	mov rax, Arg_Yolo
+EndFunction
 
-DefineFunction MultibootDst, 1, 'hello.asm'
+DeclareFunction ShitHouse(Yolo, Dolo)
+	mov rdi, Arg_this
+EndFunction
 
-DeclareFunction main, InternDef, GlobalDef, DarkSide
-	special_call ((yolo->multiboot).col->darlsode).HelloWord()
+DeclareFunction main(Dolo,Solo)
+	CreateStack Yolo
+	ReserveStackSpace MyVar, multiboot2
+	UpdateStackPtr
+
+	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
+	secure_call main(0,0)
+	DestroyStack Yolo
 EndFunction
 
 MyIntok:
 	dq 0, 0, 0
+
+
+ImportAllMgrFunctions

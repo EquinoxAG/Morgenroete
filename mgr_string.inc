@@ -113,7 +113,7 @@
 	%assign HPS_counter 1
 
 	%if HPS_WholeStrlen > HPS_PartStrlen
-		%rep (HPS_WholeStrlen-HPS_PartStrlen)
+		%rep ((HPS_WholeStrlen+1)-HPS_PartStrlen)
 			%substr HPS_TestStr %2 HPS_counter,HPS_PartStrlen	
 			MGRStrcmp HPS_TestStr, %3,HPS_IS_EQUAL
 			%ifdef HPS_IS_EQUAL
@@ -123,6 +123,11 @@
 			%assign HPS_counter (HPS_counter+1)
 		%endrep
 	%endif
+
+	%undef HPS_PartStrlen
+	%undef HPS_WholeStrlen
+	%undef HPS_counter
+	%undef HPS_TestStr
 %endmacro
 
 ;1 = new defined string, 2 = string to replace, 3 = replacment, 4 = replacement str, 5 = number of replacments
@@ -138,7 +143,7 @@
 		%substr SAR_SubStr %2 SAR_Counter, SAR_StrlenRep
 		%if SAR_SubStr = %3
 			%strcat %1 %1, %4
-			%assign %5 (%4+1)
+			%assign %5 (%5+1)
 			%assign SAR_Counter (SAR_Counter+(SAR_StrlenRep-1))
 		%else
 			%substr SAR_SubStr %2 SAR_Counter

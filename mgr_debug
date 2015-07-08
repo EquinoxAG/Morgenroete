@@ -1,0 +1,5 @@
+nasm -o mgdb.txt -e test.asm
+sed '/^$/d' mgdb.txt > mgr_info.asm
+rm mgdb.txt
+vim mgr_info.asm
+rm mgr_info.asm

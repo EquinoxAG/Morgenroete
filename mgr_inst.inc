@@ -70,7 +70,17 @@
 							%deftok INSTI %1
 							mov OP0, INSTI
 							%deftok NEW_OFF NEW_OFFSET
-							add OP0, NEW_OFF
+							%assign NEW_OFF NEW_OFF
+
+							%ifn NEW_OFF = 0
+								%if NEW_OFF < 0
+									%assign NEW_OFF -NEW_OFF
+									sub OP0, NEW_OFF
+								%else
+									add OP0, NEW_OFF
+								%endif
+							%endif
+
 							%undef NEW_OFF
 							%undef INSTI
 							%xdefine HAS_UPDATED (HAS_UPDATED+1)
@@ -88,7 +98,7 @@
 						%undef HAS_UPDATED
 					%endif
 				%endmacro
-				ReverseLoop 'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'r8', 'r9','r10','r11','r12','r13','r14','r15'
+				ReverseLoop 'rax', 'rbx', 'rcx', 'rdx', 'rsi', 'rdi', 'r8', 'r9','r10','r11','r12','r13','r14','r15', 'rbp', 'rsp'
 			%endif
 			
 			%undef OP1_SIZE
