@@ -257,9 +257,13 @@
 					%xdefine %1_parcount_%2_call %4
 					%xdefine %1_parcount_%2_add_par %5
 
-					%ifn MGR_CALL_MODULE_NumSuspects = 0
-						%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ ,
-					%endif
+				%ifn MGR_CALL_MODULE_NumSuspects = 0
+					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ ,
+					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1
+				%else
+					%xdefine MGR_CALL_MODULE_SuspectList %1
+				%endif
+		
 
 					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1_parcount_%2
 					%xdefine MGR_CALL_MODULE_NumSuspects (MGR_CALL_MODULE_NumSuspects+1)

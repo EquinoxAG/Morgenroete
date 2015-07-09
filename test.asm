@@ -23,7 +23,7 @@ interface_close
 
 DefineFunction ShitHouse, 2+
 DefineFunction multiboot::ShitHouse, 2+
-DefineFunction HelloWorld, 0+
+DefineFunction HelloWorld, 0
 
 DeclareFunction multiboot::ShitHouse(Yolo, Colo)
 	mov rdi, Arg_this
@@ -45,12 +45,9 @@ DeclareFunction main(Dolo,Solo)
 	UpdateStackPtr
 
 	MyBitmap.flags.set(3)
-	%error MyBitmap.get( MGR_BMP_VAL )
 	MyBitmap.care.set(10b)
 
 	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
-	%error MyBitmap.flags.get( MGR_BMP_OFF )  == VAL1
-	%error MyBitmap.get( MGR_BMP_VAL )
 
 	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
 	secure_call main(0,0)
