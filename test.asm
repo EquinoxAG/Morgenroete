@@ -32,6 +32,7 @@ bitmap_open MyBitmap
 	add care, 2, 0
 bitmap_close
 
+DefineFunction Colo, 0
 DeclareFunction Colo()
 EndFunction
 
@@ -45,8 +46,12 @@ DeclareFunction main(Dolo,Solo)
 
 	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
 
+	ResoluteFunctionName multiboot::ShitHouse, 2+
+	%fatal MGR_RFuncName
+
 	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
 	secure_call main(0,0)
+	secure_call Colo()
 	DestroyStack Yolo
 EndFunction
 

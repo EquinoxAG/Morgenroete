@@ -36,6 +36,41 @@
 %endmacro
 
 
+; 1 = function name, 2 = parameter count
+%macro ResoluteFunctionName 2
+	%defstr RFN_SuspectStr %1
+	SearchAndReplace RFN_FullFuncName, RFN_SuspectStr, '::', '@', RFN_NumReplaces
+	%undef RFN_SuspectStr
+	%undef RFN_NumReplaces
+
+	%defstr ParStr %2
+	HasPartStr RFN_IsVariadic,ParStr, '+'
+	%undef ParStr
+
+
+	%macro IsDefinedErr 1
+		%ifdef %1_pc
+			%xdefine MGR_RFuncName %1
+		%else
+			%fatal Unknown function %1
+		%endif
+	%endmacro
+
+	%ifdef RFN_IsVariadic
+		%undef RFN_IsVariadic
+		%deftok RFN_FullFuncName RFN_FullFuncName
+		IsDefinedErr RFN_FullFuncName
+	%else
+		%deftok RFN_FullFuncName RFN_FullFuncName
+		%xdefine RFN_FullFuncName RFN_FullFuncName %+ _parcount_%2
+		IsDefinedErr RFN_FullFuncName
+	%endif
+
+	%undef RFN_FullFuncName
+	%unmacro IsDefinedErr 1
+%endmacro
+
+
 ;1 = function name, 2-* = parameter names,
 %macro DeclareFunction 1+
 	%defstr NDF_SuspectStrTmp %1
@@ -60,7 +95,6 @@
 	%endif
 
 	%if NDF_NumArgs = 0
-		%undef NDF_NumArgs
 		%undef NDF_ArgList
 	%else
 		%deftok NDF_ArgTmpList NDF_ArgList
@@ -264,13 +298,11 @@
 
 				%ifn MGR_CALL_MODULE_NumSuspects = 0
 					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ ,
-					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1
+					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1_parcount_%2
 				%else
 					%xdefine MGR_CALL_MODULE_SuspectList %1
 				%endif
-		
 
-					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1_parcount_%2
 					%xdefine MGR_CALL_MODULE_NumSuspects (MGR_CALL_MODULE_NumSuspects+1)
 				%endif
 			%endif
@@ -418,6 +450,7 @@
 
 		%xdefine SC_TypDeductStr ''
 		%xdefine SC_SurgeryStr SC_PickingStr
+		%undef SC_PickingStr
 		%rep 200
 			%undef SC_STRPart0
 			%undef SC_STRPart1
@@ -465,7 +498,6 @@
 
 		%strlen SC_RealArgListLen SC_RealArgList
 
-
 		%if SC_RealArgListLen = 0
 			%define MAKECALL(x,y) CALL_CONV x
 		%else
@@ -479,6 +511,8 @@
 
 		%ifn SC_RealArgListLen = 0
 			%assign SC_NumParameters (SC_NumReplaces+1)
+		%else
+			%assign SC_NumParameters 0
 		%endif
 
 		%undef SC_NumReplaces
@@ -532,6 +566,7 @@
 		%undef SC_HasCalled
 		%undef SC_IsClassFunc
 		%undef MAKECALL
+		%undef SC_NumParameters
 
 		%undef SC_IsClassFunc
 		%undef SC_RealArgListLen
