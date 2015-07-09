@@ -17,6 +17,8 @@
 %xdefine MGR_FALSE 1
 %xdefine MGR_TRUE 0
 
+
+
 %macro ImportAllMgrFunctions 0
 	%if MGR_CALL_MODULE_NumSuspects > 0
 		%macro CheckDefinedShit 1-*
@@ -183,16 +185,18 @@
 %endmacro
 
 
+;1 = function name, 2 = parameter count
 %macro DefineFunction 2
 	NDefineFunction_int %1, %2, STDCALL_GCC64, StdExtCall, 0
 %endmacro
 
+; 1 = function name , 2 = parameter count , 3 = calling convention
 %macro DefineFunction 3
 	NDefineFunction_int %1, %2, %3, StdExtCall, 0
 %endmacro
 
 %macro DefineFunction 4
-	NDefineFunction_int %1, %2, %3, %3, 0
+	NDefineFunction_int %1, %2, %3, %4, 0
 %endmacro
 
 %macro DefineFunction 5

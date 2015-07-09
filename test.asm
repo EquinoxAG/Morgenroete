@@ -31,13 +31,26 @@ DeclareFunction multiboot::ShitHouse(Yolo, Colo)
 EndFunction
 
 DeclareFunction ShitHouse(Yolo, Dolo)
-	mov rdi, Arg_this
 EndFunction
+
+
+bitmap_open MyBitmap
+	add flags, 3,1
+	add care, 2, 0
+bitmap_close
 
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo
 	ReserveStackSpace MyVar, multiboot2
 	UpdateStackPtr
+
+	MyBitmap.flags.set(3)
+	%error MyBitmap.get( MGR_BMP_VAL )
+	MyBitmap.care.set(10b)
+
+	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
+	%error MyBitmap.flags.get( MGR_BMP_OFF )  == VAL1
+	%error MyBitmap.get( MGR_BMP_VAL )
 
 	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
 	secure_call main(0,0)
