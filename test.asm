@@ -25,19 +25,15 @@ DefineFunction ShitHouse, 2+
 DefineFunction multiboot::ShitHouse, 2+
 DefineFunction HelloWorld, 0
 
-DeclareFunction multiboot::ShitHouse(Yolo, Colo)
-	mov rdi, Arg_this
-	mov rax, Arg_Yolo
-EndFunction
-
-DeclareFunction ShitHouse(Yolo, Dolo)
-EndFunction
 
 
 bitmap_open MyBitmap
 	add flags, 3,1
 	add care, 2, 0
 bitmap_close
+
+DeclareFunction Colo()
+EndFunction
 
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo

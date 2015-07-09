@@ -50,10 +50,15 @@
 	%undef NDF_Unused
 	%undef NDF_ArgList
 
-	CutAllWhiteSpace NDF_ArgList, NDF_RealArgList
-	%undef NDF_RealArgList
+	%ifdef NDF_RealArgList
+		CutAllWhiteSpace NDF_ArgList, NDF_RealArgList
+		%undef NDF_RealArgList
 
-	%strlen NDF_NumArgs NDF_ArgList
+		%strlen NDF_NumArgs NDF_ArgList
+	%else
+		%xdefine NDF_NumArgs 0
+	%endif
+
 	%if NDF_NumArgs = 0
 		%undef NDF_NumArgs
 		%undef NDF_ArgList
