@@ -560,7 +560,7 @@
 
 		%undef SC_LoopCounter
 		%if SC_HasCalled = MGR_FALSE
-			%fatal There is no function SC_FunctionName which takes SC_NumParameters
+			%fatal There is no function SC_FunctionName which takes SC_NumParameters parameters!
 		%endif
 
 		%undef SC_HasCalled

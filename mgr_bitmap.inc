@@ -77,21 +77,47 @@
 		%define %4.%1.get(x) ((((%4_fullVal&(~%4.%1_mask))>>%4.%1_offset)*(x&MGR_BMP_VAL))+(%4.%1_offset*((x&MGR_BMP_OFF)>>1))+((~%4.%1_mask)*((x&MGR_BMP_MASK)>>2))+(%4.%1_mask*((x&MGR_BMP_REVMASK)>>3)))
 		%xdefine %4.%1.set(x) bitmap_set_val %4, %1, x
 		%xdefine %4.%1.or(x) bitmap_or_val %4, %1, x
-		%assign %4_size (%3+%2)
+		CalculateMaxValue %4.%1_maxVal, %2
 
+		%if %4_size < (%3+%2)
+			%assign %4_size (%3+%2)
+		%endif
+	
 		%if %4_size > 64
 			%fatal A Bitmap must not have a size above 64 bits
 		%endif
 	%endif
 %endmacro
 
+;1 = name of the maximal value, 2 = number of bits
+%macro CalculateMaxValue 2
+	%if %2 = 0
+		%assign %1 0
+	%else
+		%assign %1 1
+		%assign POW 1
+		%rep (%2-1)
+			%assign POW (POW*2)
+			%assign %1 (%1+POW)
+		%endrep
+	%endif
+%endmacro
+
 %macro bitmap_or_val 3
-	%assign %1_fullVal (%1_fullVal|(%1.%2.get<<%1.%2_offset))
+	%if %3 > %1.%2_maxVal
+		%error The bitfield %1.%2 is only %1.%2_size bits wide and cannot hold a value above %1.%2_maxVal!
+	%else
+		%assign %1_fullVal (%1_fullVal|((%1.%2.get(MGR_BMP_VAL)|%3)<<%1.%2_offset))
+	%endif
 %endmacro
 
 ; 1 = interface name, 2 = name of the full member, 3 = value
 %macro bitmap_set_val 3
-	%assign %1_fullVal ((%1_fullVal&%1.%2_mask)|(%3<<%1.%2_offset))
+	%if %3 > %1.%2_maxVal
+		%error The bitfield %1.%2 is only %1.%2_size bits wide and cannot hold a value above %1.%2_maxVal!
+	%else
+		%assign %1_fullVal ((%1_fullVal&%1.%2_mask)|(%3<<%1.%2_offset))
+	%endif
 %endmacro
 
 %macro bitmap_close 0

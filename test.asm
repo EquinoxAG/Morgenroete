@@ -25,6 +25,7 @@ DefineFunction ShitHouse, 2+
 DefineFunction multiboot::ShitHouse, 2+
 DefineFunction HelloWorld, 0
 
+;interface_constructor multiboot, ShitHouse
 
 
 bitmap_open MyBitmap
@@ -38,16 +39,15 @@ EndFunction
 
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo
-	ReserveStackSpace MyVar, multiboot2
+	ReserveStackSpace MyVar, multiboot
 	UpdateStackPtr
 
 	MyBitmap.flags.set(3)
-	MyBitmap.care.set(10b)
 
 	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
 
 	ResoluteFunctionName multiboot::ShitHouse, 2+
-	%fatal MGR_RFuncName
+
 
 	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
 	secure_call main(0,0)

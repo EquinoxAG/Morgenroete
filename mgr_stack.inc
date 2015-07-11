@@ -102,6 +102,11 @@
 	%strcat CC_Var CC_Var, '_VAR'
 	%deftok CC_Var CC_Var
 	%deftok CC_DestFunc CC_DestFunc
+	%defstr CC_RealName %1
+	%substr CC_RealName CC_RealName 3, 100
+	%deftok CC_RealName CC_RealName
+	%xdefine CC_DestFunc CC_RealName %+ . %+ CC_DestFunc
+	%xdefine CC_DestFunc CC_DestFunc %+ (rbx
 
 	%deftok CC_DestFuncArgs CC_DestFuncArgs
 
@@ -112,16 +117,19 @@
 	sub rbx, CC_Var
 
 	%if CC_ArgsLen = 0
-		secure_call CC_DestFunc, rbx
+		%xdefine CC_DestFunc CC_DestFunc %+ )
+		secure_call CC_DestFunc
 	%else
 		%deftok CC_DestFuncArgs CC_DestFuncArgs
-		secure_call CC_DestFunc, rbx, CC_DestFuncArgs
+		%xdefine CC_DestFunc CC_DestFunc %+ , %+ CC_DestFuncArgs %+ )
+		secure_call CC_DestFunc
 	%endif
 
 	%undef CC_ArgsLen
 	%undef CC_Var
 	%undef CC_DestFunc
 	%undef CC_DestFuncArgs
+	%undef CC_RealName
 %endmacro
 
 ;1 = stack name
