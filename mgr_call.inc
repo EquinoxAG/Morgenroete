@@ -640,7 +640,12 @@
 	%ifdef MIU_IsEqual
 		%undef MIU_IsEqual
 	%else
-		mov_ts %1, %2
+		%ifstr %2
+			%%local_str: db %2
+			mov %1, %%local_str
+		%else
+			mov_ts %1, %2
+		%endif
 	%endif
 
 	%undef MIU_STR0
