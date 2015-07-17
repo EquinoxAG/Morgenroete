@@ -527,7 +527,7 @@
 		%endif
 
 
-		%error MGR_CALL_MODULE_SuspectList
+
 		%deftok SC_ArgListImp SC_RealArgList
 		SearchAndReplace SC_NewArgList, SC_RealArgList, ',',',', SC_NumReplaces
 		%undef SC_NewArgList
@@ -547,7 +547,7 @@
 		%else
 			%xdefine SC_DepthSearches 1
 		%endif
-		%error MGR_CALL_MODULE_SuspectList
+	
 		%assign SC_LoopCounter 1
 
 		%xdefine SC_HasCalled MGR_FALSE
@@ -583,7 +583,7 @@
 			%assign SC_LoopCounter (SC_LoopCounter+1)
 			%undef CALL_CONV
 		%endrep
-		%error MGR_CALL_MODULE_SuspectList
+
 		
 		%undef SC_LoopCounter
 		%if SC_HasCalled = MGR_FALSE
