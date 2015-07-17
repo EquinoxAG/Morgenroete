@@ -249,6 +249,7 @@
 			%defstr CIDAFLK_TryStr %2
 		
 			
+			%error %1
 			%defstr CIDAFLK_FuncStr %1
 			SearchAndReplace CIDA_Error_str, CIDAFLK_FuncStr, '@','::', Num_Replaces
 			%undef Num_Replaces
@@ -297,12 +298,12 @@
 					%xdefine %1_parcount_%2_call %4
 					%xdefine %1_parcount_%2_add_par %5
 
-				%ifn MGR_CALL_MODULE_NumSuspects = 0
-					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ ,
-					%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1_parcount_%2
-				%else
-					%xdefine MGR_CALL_MODULE_SuspectList %1_parcount_%2
-				%endif
+					%ifn MGR_CALL_MODULE_NumSuspects = 0
+						%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ ,
+						%xdefine MGR_CALL_MODULE_SuspectList MGR_CALL_MODULE_SuspectList %+ %1_parcount_%2
+					%else
+						%xdefine MGR_CALL_MODULE_SuspectList %1_parcount_%2
+					%endif
 
 					%xdefine MGR_CALL_MODULE_NumSuspects (MGR_CALL_MODULE_NumSuspects+1)
 				%endif
@@ -344,8 +345,7 @@
 				%assign NDF_RealParCount (%2+1)
 			%endif
 			%undef NDF_ChangeParCount
-
-			%xdefine NDF_FunctionDefineName NDF_InterfaceNameToken %+ @ %+ NDF_FunctionNameToken %+ _parcount_ %+ NDF_RealParCount
+	
 		%else
 			%fatal The interface NDF_InterfaceName does not exitst, therefore there cannot be a class function of this class
 		%endif
