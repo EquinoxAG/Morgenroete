@@ -514,6 +514,7 @@
 
 		%ifdef SC_IsClassFunc
 			%undef SC_IsClassFunc
+			%undef SC_InterfaceName
 			PartStringsByCharLast SC_TypDeductStr, '.', SC_InterfaceName, SC_FunctionName
 			%deftok TmpIntName SC_InterfaceName
 			SearchReplaceLocalVar TmpIntName, SC_DeleteInstant, SC_DeductedType
