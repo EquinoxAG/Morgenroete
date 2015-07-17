@@ -530,14 +530,11 @@
 		%xdefine SC_HasCalled MGR_FALSE
 
 		%rep SC_DepthSearches
-			%if SC_LoopCounter = 1
-				%xdefine SC_FunctionName SC_DeductedType
-			%else
-				%ifdef SC_IsClassFunc
-					%undef SC_CurrentDerivedClass
-					GetBaseClassByNum SC_DeductedType, SC_LoopCounter, SC_CurrentDerivedClass
-					%xdefine SC_FunctionName SC_CurrentDerivedClass %+ SC_IsClassFunc
-				%endif
+		
+			%ifdef SC_IsClassFunc
+				%undef SC_CurrentDerivedClass
+				GetBaseClassByNum SC_DeductedType, SC_LoopCounter, SC_CurrentDerivedClass
+				%xdefine SC_FunctionName SC_CurrentDerivedClass %+ SC_IsClassFunc
 			%endif
 
 

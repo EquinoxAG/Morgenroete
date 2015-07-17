@@ -136,6 +136,7 @@
 		%endrep
 
 		%macro VeryDeppDefine 2
+			%error Define %1 to %2
 			%xdefine %1 %2
 		%endmacro
 		VeryDeppDefine To_Def_Name, %1

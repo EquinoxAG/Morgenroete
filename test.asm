@@ -22,7 +22,7 @@ interface_close
 
 
 DefineFunction ShitHouse, 2+
-DefineFunction multiboot::ShitHouse, 0
+DefineFunction multiboot::ShitHouse, 1
 DefineFunction HelloWorld, 0
 
 ;interface_constructor multiboot, ShitHouse
@@ -33,9 +33,6 @@ bitmap_open MyBitmap
 	add care, 2, 0
 bitmap_close
 
-DefineFunction Colo, 0
-DeclareFunction Colo()
-EndFunction
 
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo
@@ -49,9 +46,9 @@ DeclareFunction main(Dolo,Solo)
 	;ResoluteFunctionName multiboot::ShitHouse, 2+
 
 
-	secure_call MyVar.ShitHouse()
-	secure_call main(0,0)
-	secure_call Colo()
+	secure_call MyVar.ShitHouse(rax)
+
+
 	DestroyStack Yolo
 EndFunction
 
