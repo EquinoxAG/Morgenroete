@@ -34,6 +34,16 @@ bitmap_open MyBitmap
 bitmap_close
 
 
+%macro TestStr 1+
+	%defstr SOLO %1
+	%error Some place SOLO
+	ReplaceInStringOnly SOLO, ',','MGR_RESET_COMMA',NEW_StrS
+	%error Some place NEW_StrS
+	ReplaceInStringOnly SOLO, 'MGR_RESET_COMMA', ',', NEW_SuperStr
+	%error Some place NEW_SuperStr
+
+%endmacro 
+
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo
 	ReserveStackSpace MyVar, multiboot
@@ -46,7 +56,8 @@ DeclareFunction main(Dolo,Solo)
 	;ResoluteFunctionName multiboot::ShitHouse, 2+
 
 
-	secure_call MyVar.ShitHouse(rax)
+
+	secure_call MyVar.ShitHouse("Was los, yolo, solo")
 
 
 	DestroyStack Yolo

@@ -553,8 +553,21 @@
 
 
 
-		%deftok SC_ArgListImp SC_RealArgList
-		SearchAndReplace SC_NewArgList, SC_RealArgList, ',',',', SC_NumReplaces
+		
+	
+		ReplaceInStringOnly SC_RealArgList, ',', 'MGR_REPLACE_COMMA', SC_SARString
+
+
+		SearchAndReplace SC_NewArgList, SC_SARString, ',',',', SC_NumReplaces	
+	
+		ReplaceInStringOnly SC_SARString, 'MGR_REPLACE_COMMA', ',', SC_NewStrShit
+		%deftok SC_ArgListImp SC_NewStrShit
+		%undef SC_NewStrShit
+		%undef SC_RealArgList
+
+		%undef SC_SARString
+		
+
 		%undef SC_NewArgList
 
 		%ifn SC_RealArgListLen = 0

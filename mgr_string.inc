@@ -297,6 +297,59 @@
 	%undef DSBC_current_char
 %endmacro
 
+;1 = string, 2 = to search for in string, 3 = to replace in string, 4 = new string define
+%macro ReplaceInStringOnly 4
+	%strlen RISO_Strlen %1
+	%strlen RISO_RepStr %2
+
+	%assign RISO_Counter 1
+
+	%xdefine %4 ''
+	%undef RISO_InStr
+
+	%rep RISO_Strlen
+
+		%ifdef RISO_InStr
+			%substr RISO_SubStr %1 RISO_Counter, RISO_RepStr
+			MGRStrcmp RISO_SubStr, %2, RISO_ICtr
+			%ifdef RISO_ICtr
+				%strcat %4 %4, %3
+				%undef RISO_ICtr
+			%else
+				%substr RISO_char %1 RISO_Counter
+				%strcat %4 %4, RISO_char
+				
+				%if RISO_char = RISO_InStr
+					%undef RISO_InStr
+				%endif
+
+			%endif
+		%else
+			%substr RISO_char %1 RISO_Counter
+			%strcat %4 %4, RISO_char
+
+			%if RISO_char = '"'
+				%xdefine RISO_InStr '"'
+			%elif RISO_char = "'"
+				%xdefine RISO_InStr "'"
+			%endif
+
+		%endif
+
+		%assign RISO_Counter (RISO_Counter+1)
+	%endrep
+
+	%undef RISO_InStr
+	%undef RISO_ICtr
+	%undef RISO_char
+	%undef RISO_Counter
+	%undef RISO_Strlen
+	%undef RISO_RepStr
+	%undef RISO_SubStr
+%endmacro
+
+
+
 
 %macro PartStringsByCharLast 4
 	%xdefine DSBC_counter 1
