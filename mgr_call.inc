@@ -449,6 +449,7 @@
 	%error SC_ArgList
 	%error SC_ArgListReal
 	%error SC_DepthSearches
+	%error SC_CurrentDerivedClass
 %endmacro
 
 %macro secure_call 1+
@@ -526,6 +527,7 @@
 		%endif
 
 
+		%error MGR_CALL_MODULE_SuspectList
 		%deftok SC_ArgListImp SC_RealArgList
 		SearchAndReplace SC_NewArgList, SC_RealArgList, ',',',', SC_NumReplaces
 		%undef SC_NewArgList
@@ -545,7 +547,7 @@
 		%else
 			%xdefine SC_DepthSearches 1
 		%endif
-
+		%error MGR_CALL_MODULE_SuspectList
 		%assign SC_LoopCounter 1
 
 		%xdefine SC_HasCalled MGR_FALSE
@@ -581,7 +583,8 @@
 			%assign SC_LoopCounter (SC_LoopCounter+1)
 			%undef CALL_CONV
 		%endrep
-
+		%error MGR_CALL_MODULE_SuspectList
+		
 		%undef SC_LoopCounter
 		%if SC_HasCalled = MGR_FALSE
 			%fatal There is no function SC_FunctionName which takes SC_NumParameters parameters!
@@ -593,6 +596,7 @@
 		%undef MAKECALL
 		%undef SC_NumParameters
 
+		%undef SC_FunctionName
 		%undef SC_IsClassFunc
 		%undef SC_RealArgListLen
 		%undef SC_RealArgList
