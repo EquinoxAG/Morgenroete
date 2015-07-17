@@ -247,7 +247,8 @@
 		;1 = function name, 2 = parameter count, 3 = calling convention
 		%macro CheckIfDefinedAFuncLikeThat 5
 			%defstr CIDAFLK_TryStr %2
-			
+		
+			%error %1
 			%defstr CIDAFLK_FuncStr %1
 			SearchAndReplace CIDA_Error_str, CIDAFLK_FuncStr, '@','::', Num_Replaces
 			%undef Num_Replaces
