@@ -508,8 +508,18 @@
 			%xdefine SC_FunctionName SC_DeductedType %+ @ %+ TmpIntName
 			%xdefine SC_IsClassFunc @ %+ TmpIntName
 			%undef TmpIntName
-			%strcat SC_ArgListImp ',', SC_ArgListImp
-			%strcat SC_ArgListImp SC_InterfaceName, SC_ArgListImp
+
+			CutAllCharactersOfType SC_NArgs, SC_ArgListImp, ' '
+			%strlen SC_NArgN SC_NArgs
+			%undef SC_NArgs
+			%if SC_NArgN = 0
+				%xdefine SC_ArgListImp SC_InterfaceName
+			%else
+				%strcat SC_ArgListImp ',', SC_ArgListImp
+				%strcat SC_ArgListImp SC_InterfaceName, SC_ArgListImp
+			%endif
+			%undef SC_NArgN
+
 		%else
 			%deftok SC_FunctionName SC_TypDeductStr
 		%endif
