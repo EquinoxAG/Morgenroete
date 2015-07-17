@@ -106,7 +106,7 @@
 	%substr CC_RealName CC_RealName 3, 100
 	%deftok CC_RealName CC_RealName
 	%xdefine CC_DestFunc CC_RealName %+ . %+ CC_DestFunc
-	%xdefine CC_DestFunc CC_DestFunc %+ (rbx
+	%xdefine CC_DestFunc CC_DestFunc %+ (
 
 	%deftok CC_DestFuncArgs CC_DestFuncArgs
 
