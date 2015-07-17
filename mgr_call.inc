@@ -434,6 +434,23 @@
 
 
 
+%macro CheckThings 0
+	%error SC_PickingStr
+	%error SC_HasArgList
+	%error SC_HasSynErr
+	%error SC_SurgeryStr
+	%error SC_TypDeductStr
+	%error SC_FunctionName
+	%error SC_InterfaceName
+	%error SC_IsClassFunc
+	%error TmpIntName
+	%error SC_DeductedType
+	%error SC_ArgListImp
+	%error SC_ArgList
+	%error SC_ArgListReal
+	%error SC_DepthSearches
+%endmacro
+
 %macro secure_call 1+
 	%defstr SC_PickingStr %1
 
