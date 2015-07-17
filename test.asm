@@ -57,7 +57,7 @@ DeclareFunction main(Dolo,Solo)
 
 
 
-	secure_call MyVar.ShitHouse("Was los, yolo, solo")
+	secure_call MyVar.ShitHouse({"Was los, yolo, solo",'Hangout'})
 
 
 	DestroyStack Yolo

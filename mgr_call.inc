@@ -561,6 +561,8 @@
 		SearchAndReplace SC_NewArgList, SC_SARString, ',',',', SC_NumReplaces	
 	
 		ReplaceInStringOnly SC_SARString, 'MGR_REPLACE_COMMA', ',', SC_NewStrShit
+
+		
 		%deftok SC_ArgListImp SC_NewStrShit
 		%undef SC_NewStrShit
 		%undef SC_RealArgList
@@ -645,6 +647,15 @@
 		%fatal The function misses any argument list %1!
 	%endif
 %endmacro
+
+%macro move_if_unequal 3-*
+	jmp %%skip
+	%%local_str: db %{2:-1}, 0
+	%%skip:
+		mov %1, %%local_str
+	
+%endmacro
+
 
 %macro move_if_unequal 2
 	%defstr MIU_STR0 %1

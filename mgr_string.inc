@@ -313,27 +313,37 @@
 			%substr RISO_SubStr %1 RISO_Counter, RISO_RepStr
 			MGRStrcmp RISO_SubStr, %2, RISO_ICtr
 			%ifdef RISO_ICtr
-				%strcat %4 %4, %3
+				%strcat %4 %4, %3	
 				%undef RISO_ICtr
+				%assign RISO_Counter (RISO_Counter + RISO_RepStr-1)
 			%else
 				%substr RISO_char %1 RISO_Counter
-				%strcat %4 %4, RISO_char
+
 				
 				%if RISO_char = RISO_InStr
 					%undef RISO_InStr
 				%endif
 
+				%if RISO_char = "'"
+					%strcat %4 %4, '"'
+				%else
+					%strcat %4 %4, RISO_char
+				%endif
 			%endif
 		%else
 			%substr RISO_char %1 RISO_Counter
-			%strcat %4 %4, RISO_char
+			
 
 			%if RISO_char = '"'
-				%xdefine RISO_InStr '"'
+				%xdefine RISO_InStr '"'	
 			%elif RISO_char = "'"
 				%xdefine RISO_InStr "'"
+				%xdefine RISO_char '"'
+			%elif RISO_char = '{'
+				%xdefine RISO_InStr '}'
 			%endif
 
+			%strcat %4 %4, RISO_char
 		%endif
 
 		%assign RISO_Counter (RISO_Counter+1)
