@@ -22,7 +22,7 @@ interface_close
 
 
 DefineFunction ShitHouse, 2+
-DefineFunction multiboot::ShitHouse, 2+
+DefineFunction multiboot::ShitHouse, 0
 DefineFunction HelloWorld, 0
 
 ;interface_constructor multiboot, ShitHouse
@@ -46,10 +46,10 @@ DeclareFunction main(Dolo,Solo)
 
 	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
 
-	ResoluteFunctionName multiboot::ShitHouse, 2+
+	;ResoluteFunctionName multiboot::ShitHouse, 2+
 
 
-	secure_call MyVar.ShitHouse(rax,rbx,rcx, rsi)
+	secure_call MyVar.ShitHouse()
 	secure_call main(0,0)
 	secure_call Colo()
 	DestroyStack Yolo
