@@ -644,7 +644,7 @@
 	%else
 		%ifstr %2
 			jmp %%skip
-			%%local_str: db %2
+			%%local_str: db %2,0
 			%%skip:
 			mov %1, %%local_str
 		%else
