@@ -159,6 +159,9 @@
 	%ifdef NDF_ArgList
 		BringToString NDF_ArgListStr, NDF_ParameterCountU, NDF_ArgList
 		%assign NDF_NumArgs (NDF_NumArgumentsIn)
+	%else
+		%assign NDF_NumArgumentsIn 0
+		%assign NDF_NumArgs 0
 	%endif
 
 	%ifdef NDF_DeclareNonVariadic
