@@ -495,6 +495,7 @@
 				%strcat SC_TypDeductStr SC_TypDeductStr, '('
 				%xdefine SC_SurgeryStr SC_STRPart1
 			%else
+				%undef SC_ArgListImp
 				PartStringsByCharLast SC_STRPart1,')', SC_ArgListImp, SC_ArgListTmp
 				%undef SC_ArgListTmp
 				%ifndef SC_ArgListImp
