@@ -23,8 +23,10 @@
 	%if MGR_CALL_MODULE_NumSuspects > 0
 		%macro CheckDefinedShit 1-*
 			%rep %0
-				%ifndef %1_declared
-					extern %1
+				%ifnstr %1
+					%ifndef %1_declared
+						extern %1
+					%endif
 				%endif
 				%rotate 1
 			%endrep
