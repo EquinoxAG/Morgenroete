@@ -167,8 +167,11 @@
 	%ifdef NDF_DeclareNonVariadic
 		%undef NDF_DeclareNonVariadic
 		%if NDF_NumReplaces > 0
-			%xdefine NDF_ArgListStr 'this', %+ NDF_ArgListStr
-			%error NDF_ArgListStr
+			%ifdef NDF_ArgListStr
+				%xdefine NDF_ArgListStr 'this', %+ NDF_ArgListStr
+			%else
+				%xdefine NDF_ArgListStr 'this'
+			%endif
 			%assign NDF_NumArgs (NDF_NumArgumentsIn+1)
 		%endif
 		%xdefine NDF_FuncName NDF_FuncName %+ _parcount_ %+ NDF_NumArgs
