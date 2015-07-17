@@ -18,7 +18,7 @@
 %xdefine MGR_TRUE 0
 
 
-
+%define TO_INT(x) ((x+1)-1)
 %macro ImportAllMgrFunctions 0
 	%if MGR_CALL_MODULE_NumSuspects > 0
 		%macro CheckDefinedShit 1-*
