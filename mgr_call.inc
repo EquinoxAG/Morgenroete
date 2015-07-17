@@ -532,6 +532,7 @@
 
 		%rep SC_DepthSearches
 			%ifdef SC_IsClassFunc
+				%undef SC_CurrentDerivedClass
 				GetBaseClassByNum SC_DeductedType, SC_LoopCounter, SC_CurrentDerivedClass
 				%xdefine SC_FunctionName SC_CurrentDerivedClass %+ SC_IsClassFunc
 			%endif
