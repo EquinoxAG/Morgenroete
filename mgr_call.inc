@@ -173,7 +173,11 @@
 		%xdefine NDF_FuncName NDF_FuncName %+ _parcount_ %+ NDF_NumArgs
 	%else	
 		%if NDF_NumReplaces > 0
-			%xdefine NDF_ArgListStr 'this', %+ NDF_ArgListStr
+			%ifdef NDF_ArgList
+				%xdefine NDF_ArgListStr 'this', %+ NDF_ArgListStr
+			%else
+				%xdefine NDF_ArgListStr 'this'
+			%endif
 			%assign NDF_NumArgs (NDF_NumArgumentsIn+1)
 		%endif
 	%endif
