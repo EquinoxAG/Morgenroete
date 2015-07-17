@@ -249,7 +249,6 @@
 			%defstr CIDAFLK_TryStr %2
 		
 			
-			%error %1
 			%defstr CIDAFLK_FuncStr %1
 			SearchAndReplace CIDA_Error_str, CIDAFLK_FuncStr, '@','::', Num_Replaces
 			%undef Num_Replaces
@@ -535,6 +534,7 @@
 				%undef SC_CurrentDerivedClass
 				GetBaseClassByNum SC_DeductedType, SC_LoopCounter, SC_CurrentDerivedClass
 				%xdefine SC_FunctionName SC_CurrentDerivedClass %+ SC_IsClassFunc
+				%error SC_CurrentDerivedClass
 			%endif
 
 
