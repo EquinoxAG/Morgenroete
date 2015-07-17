@@ -27,6 +27,8 @@
 					%ifndef %1_declared
 						extern %1
 					%endif
+				%else
+					%warning %1
 				%endif
 				%rotate 1
 			%endrep
