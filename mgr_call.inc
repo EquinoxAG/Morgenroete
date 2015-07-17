@@ -563,6 +563,7 @@
 			%fatal There is no function SC_FunctionName which takes SC_NumParameters parameters!
 		%endif
 
+		%undef SC_DepthSearches
 		%undef SC_HasCalled
 		%undef SC_IsClassFunc
 		%undef MAKECALL
