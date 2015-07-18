@@ -22,11 +22,14 @@ interface_close
 
 
 DefineFunction ShitHouse, 2+
-DefineFunction multiboot::ShitHouse, 1
+DefineFunction multiboot::ShitHouse, 2
 DefineFunction HelloWorld, 0
 
-;interface_constructor multiboot, ShitHouse
+interface_constructor multiboot, ShitHouse
 
+DeclareFunction multiboot::ShitHouse(Ylo, Colo )
+
+EndFunction
 
 bitmap_open MyBitmap
 	add flags, 3,1
@@ -46,7 +49,7 @@ bitmap_close
 
 DeclareFunction main(Dolo,Solo)
 	CreateStack Yolo
-	ReserveStackSpace MyVar, multiboot
+	ReserveStackSpace MyVar, multiboot, 10, 10
 	UpdateStackPtr
 
 	MyBitmap.flags.set(3)
@@ -57,7 +60,7 @@ DeclareFunction main(Dolo,Solo)
 
 
 
-	secure_call MyVar.ShitHouse({"Was los, yolo, solo",'Hangout'})
+;	secure_call MyVar.ShitHouse({"Was los, yolo, solo",'Hangout'})
 
 
 	DestroyStack Yolo

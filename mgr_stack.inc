@@ -116,12 +116,13 @@
 	mov rbx, rbp
 	sub rbx, CC_Var
 
+
 	%if CC_ArgsLen = 0
 		%xdefine CC_DestFunc CC_DestFunc %+ )
 		secure_call CC_DestFunc
 	%else
 		%deftok CC_DestFuncArgs CC_DestFuncArgs
-		%xdefine CC_DestFunc CC_DestFunc %+ , %+ CC_DestFuncArgs %+ )
+		%xdefine CC_DestFunc CC_DestFunc %+ CC_DestFuncArgs %+ )
 		secure_call CC_DestFunc
 	%endif
 
