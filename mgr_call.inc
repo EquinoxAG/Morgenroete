@@ -793,8 +793,6 @@
 %endmacro
 
 %macro STDCALL_VX64GCC 1-*
-	
-	%fatal %{-1:1}
 	%xdefine CALL_FUNC %1_call
 	%xdefine FUNC_NAME %1
 	%xdefine CALL_FUNC_ADD_PAR %1_add_par
