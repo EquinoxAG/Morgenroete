@@ -21,49 +21,14 @@ interface_close
 %define MB_ADDR 0x1000
 
 
-DefineFunction ShitHouse, 2+
-DefineFunction multiboot::ShitHouse, 2
-DefineFunction HelloWorld, 0
-
-interface_constructor multiboot, ShitHouse
-
-DeclareFunction multiboot::ShitHouse(Ylo, Colo )
-
+DefineFunction HelloWorld, 1
+DeclareFunction HelloWord(strss)
+	jmp $
 EndFunction
 
-bitmap_open MyBitmap
-	add flags, 3,1
-	add care, 2, 0
-bitmap_close
-
-
-%macro TestStr 1+
-	%defstr SOLO %1
-	%error Some place SOLO
-	ReplaceInStringOnly SOLO, ',','MGR_RESET_COMMA',NEW_StrS
-	%error Some place NEW_StrS
-	ReplaceInStringOnly SOLO, 'MGR_RESET_COMMA', ',', NEW_SuperStr
-	%error Some place NEW_SuperStr
-
-%endmacro 
 
 DeclareFunction main(Dolo,Solo)
-	CreateStack Yolo
-	ReserveStackSpace MyVar, multiboot, 10, 10
-	UpdateStackPtr
-
-	MyBitmap.flags.set(3)
-
-	%assign VAL1 MyBitmap.flags.get( MGR_BMP_OFF )
-
-	;ResoluteFunctionName multiboot::ShitHouse, 2+
-
-
-
-;	secure_call MyVar.ShitHouse({"Was los, yolo, solo",'Hangout'})
-
-
-	DestroyStack Yolo
+	secure_call HelloWorld("Hallo Killas")
 EndFunction
 
 MyIntok:

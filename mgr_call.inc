@@ -529,7 +529,6 @@
 			CutAllCharactersOfType SC_NArgs, SC_ArgWhite, ' '
 			%strlen SC_NArgN SC_NArgs
 			%undef SC_NArgs
-			%undef SC_ArgListImp
 			%undef SC_ArgWhite
 
 			%if SC_NArgN = 0
@@ -544,6 +543,8 @@
 			%deftok SC_FunctionName SC_TypDeductStr
 		%endif
 
+		%undef SC_ArgWhite
+		
 		ReplaceInStringOnly SC_ArgListImp, ' ', 'MGR_REPLACE_WHITESPACE', SC_ArgWhite
 		%xdefine SC_ArgListImp SC_ArgWhite
 		CutAllCharactersOfType SC_RealArgList, SC_ArgListImp, ' '
@@ -792,6 +793,8 @@
 %endmacro
 
 %macro STDCALL_VX64GCC 1-*
+	
+	%fatal %{-1:1}
 	%xdefine CALL_FUNC %1_call
 	%xdefine FUNC_NAME %1
 	%xdefine CALL_FUNC_ADD_PAR %1_add_par
