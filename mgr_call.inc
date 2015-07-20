@@ -524,9 +524,14 @@
 			%xdefine SC_IsClassFunc @ %+ TmpIntName
 			%undef TmpIntName
 
-			CutAllCharactersOfType SC_NArgs, SC_ArgListImp, ' '
+			ReplaceInStringOnly SC_ArgListImp, ' ', 'MGR_REPLACE_WHITESPACE', SC_ArgWhite
+
+			CutAllCharactersOfType SC_NArgs, SC_ArgWhite, ' '
 			%strlen SC_NArgN SC_NArgs
 			%undef SC_NArgs
+			%undef SC_ArgListImp
+			%undef SC_ArgWhite
+
 			%if SC_NArgN = 0
 				%xdefine SC_ArgListImp SC_InterfaceName
 			%else
@@ -539,11 +544,14 @@
 			%deftok SC_FunctionName SC_TypDeductStr
 		%endif
 
+		ReplaceInStringOnly SC_ArgListImp, ' ', 'MGR_REPLACE_WHITESPACE', SC_ArgWhite
+		%xdefine SC_ArgListImp SC_ArgWhite
 		CutAllCharactersOfType SC_RealArgList, SC_ArgListImp, ' '
-
-
-
 		%strlen SC_RealArgListLen SC_RealArgList
+
+		%undef SC_RealArgList
+		ReplaceInStringOnly SC_ArgWhite, 'MGR_REPLACE_WHITESPACE', ' ', SC_RealArgList
+		%undef SC_ArgWhite
 
 		%if SC_RealArgListLen = 0
 			%define MAKECALL(x,y) CALL_CONV x
